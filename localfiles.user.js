@@ -73,8 +73,10 @@ function dirLoaded(){
 };
 
 var zoomedToFit=false;
-function zoom_in(){
+function zoom_in(ev){
+	el=getEventTarget(ev);
 	zoomedToFit = !zoomedToFit;
+	el.src=chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png'));
 	imageViewResizedHandler();
 }
 function determineIfZoomedToFit(){
@@ -138,14 +140,16 @@ function createNextPrevArrows(){
 								 }
 		)
 	);
-	leftElm.push(
-		Cr.elm('img',{'title':'Zoom',
-										'src':chrome.extension.getURL('img/arrow_up.png'),
-										width:'77',events:['click',zoom_in],
-										style:'cursor:pointer;'
-								 }
-		)
-	);
+	if(!zoomedToFit){
+		leftElm.push(
+			Cr.elm('img',{'title':'Zoom',
+											'src':chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png')),
+											width:'77',events:['click',zoom_in],
+											style:'cursor:pointer;'
+									 }
+			)
+		);
+	}
 
 	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;'},leftElm,document.body);
 
@@ -212,7 +216,6 @@ function anImageLoaded(ev){
 
 function loadDirFileIdToCvs(dirId){
 	Cr.elm('img',{loadevent:['load',anImageLoaded],id:dirId,src:directoryURL+dirFiles[dirId]});
-	
 }
 
 var pageScrTimeout=0;
