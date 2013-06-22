@@ -6,11 +6,13 @@ var dirCurFile = -1;
 var timeoutId=0;
 
 if(directoryURL.substr(directoryURL.length-1,1)!='/'){
-	var dirparts=directoryURL.split('/');
-	startFileName=dirparts[dirparts.length-1];
-	dirparts.splice(dirparts.length-1,1);
-	directoryURL=dirparts.join('/')+'/';
-	isViewingImage_LoadDirectory();
+	if(isValidFile(directoryURL)){
+		var dirparts=directoryURL.split('/');
+		startFileName=dirparts[dirparts.length-1];
+		dirparts.splice(dirparts.length-1,1);
+		directoryURL=dirparts.join('/')+'/';
+		isViewingImage_LoadDirectory();
+	}
 }else{
 	isViewingDirectory_LoadThumbnails();
 }
@@ -46,6 +48,7 @@ function processFileRows(resp){
 		var f=rows[i].substr(st,rows[i].indexOf('"',st)-st);
 
 		if(f != '..'){
+			if(!isValidFile(f))continue;
 			if(f==startFileName){
 				dirCurFile=dirFiles.length;
 			}
@@ -69,6 +72,15 @@ function dirLoaded(){
 	}
 };
 
+var zoomedToFit=false;
+function zoom_in(){
+	zoomedToFit = !zoomedToFit;
+	imageViewResizedHandler();
+}
+function determineIfZoomedToFit(){
+	var im=document.body.getElementsByTagName('img')[0];
+	if(im)zoomedToFit=im.naturalWidth != im.clientWidth;
+}
 var imgViewResizedTimeout=0;
 function imageViewResized(){
 	clearTimeout(imgViewResizedTimeout);
@@ -77,6 +89,20 @@ function imageViewResized(){
 function imageViewResizedHandler(){
 	var im=document.body.getElementsByTagName('img')[0];
 	if(im){
+		if(zoomedToFit){
+			var im_ratio=im.naturalWidth/im.naturalHeight;
+			var wn_ratio=window.innerWidth/window.innerHeight;
+			if(wn_ratio > im_ratio){
+				im.height = window.innerHeight;
+				im.width = window.innerHeight * im_ratio;
+			}else{
+				im.width = window.innerWidth;
+				im.height = window.innerWidth / im_ratio;
+			}
+		}else{
+			im.width = im.naturalWidth;
+			im.height = im.naturalHeight;
+		}
 		if(im.clientHeight < window.innerHeight){
 			im.style.marginTop=Math.round((window.innerHeight - im.clientHeight) * 0.5)+'px';
 		}else im.style.marginTop='0px';
@@ -89,23 +115,48 @@ function createNextPrevArrows(){
 		return;
 	}
 	document.body.style.textAlign='center';
+	determineIfZoomedToFit();
 	imageViewResizedHandler();
-	Cr.elm('img',	{'title':'Previous: '+getPrevName(dirCurFile),
-									'src':chrome.extension.getURL('img/arrow_left.png'),
-									width:'77',events:['click',nav_prev],
-									style:'position:fixed;bottom:0px;left:0px;cursor:pointer;'
-								},[],document.body);
-//	Cr.elm('img',	{'title':'View Parent Directory',
-//									'src':chrome.extension.getURL('img/arrow_up.png'),
-//									width:'77',events:['click',nav_up],
-//									style:'position:fixed;bottom:0px;left:77px;cursor:pointer;'
-//								},[],document.body);
-	Cr.elm('img',{'title':'Next: '+getNextName(dirCurFile),
-									'src':chrome.extension.getURL('img/arrow_right.png'),
-									width:'77',events:['click',nav_next],
-									style:'position:fixed;bottom:0px;right:0px;cursor:pointer;'
-								},[],document.body);
-								
+
+	var showArrows = dirFiles.length > 1;
+	var leftElm=[];
+	if(showArrows){
+		leftElm.push(
+			Cr.elm('img',{'title':'Previous: '+getPrevName(dirCurFile),
+											'src':chrome.extension.getURL('img/arrow_left.png'),
+											width:'77',events:['click',nav_prev],
+											style:'cursor:pointer;'
+									 }
+			)
+		);
+	}
+	leftElm.push(
+		Cr.elm('img',{'title':'View Parent Directory',
+										'src':chrome.extension.getURL('img/arrow_up.png'),
+										width:'77',events:['click',nav_up],
+										style:'cursor:pointer;'
+								 }
+		)
+	);
+	leftElm.push(
+		Cr.elm('img',{'title':'Zoom',
+										'src':chrome.extension.getURL('img/arrow_up.png'),
+										width:'77',events:['click',zoom_in],
+										style:'cursor:pointer;'
+								 }
+		)
+	);
+
+	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;'},leftElm,document.body);
+
+	if(showArrows){
+		Cr.elm('img',{'title':'Next: '+getNextName(dirCurFile),
+										'src':chrome.extension.getURL('img/arrow_right.png'),
+										width:'77',events:['click',nav_next],
+										style:'position:fixed;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;'
+									},[],document.body);
+	}
+					
 	window.addEventListener('resize', imageViewResized);
 }
 
