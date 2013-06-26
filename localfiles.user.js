@@ -76,7 +76,7 @@ var zoomedToFit=false;
 function zoom_in(ev){
 	el=getEventTarget(ev);
 	zoomedToFit = !zoomedToFit;
-	el.src=chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png'));
+	if(el)el.src=chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png'));
 	imageViewResizedHandler();
 }
 function determineIfZoomedToFit(){
@@ -162,6 +162,17 @@ function createNextPrevArrows(){
 	}
 					
 	window.addEventListener('resize', imageViewResized);
+	window.addEventListener('keyup',wk);
+}
+
+function wk(ev){
+	if(ev.keyCode==37 || ev.keyCode==38){//up left
+		nav_prev();
+	}else if(ev.keyCode==39||ev.keyCode==40){//down right
+		nav_next();
+	}else if(ev.keyCode==32){//space
+		zoom_in();
+	}
 }
 
 function gel(n){
