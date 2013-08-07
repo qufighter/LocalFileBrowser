@@ -16,6 +16,7 @@
       "128": "img/icon128.png"
    },
    "web_accessible_resources": [
+     "localfiles_print.css",
      "img/arrow_left.png",
      "img/arrow_right.png",
      "img/arrow_up.png",
@@ -25,5 +26,5 @@
    "permissions": [
       "tabs", "<all_urls>"
    ],
-   "version": "0.0.0.3"
+   "version": "0.0.0.4"
 }

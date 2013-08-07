@@ -12,6 +12,7 @@ if(directoryURL.substr(directoryURL.length-1,1)!='/'){
 		dirparts.splice(dirparts.length-1,1);
 		directoryURL=dirparts.join('/')+'/';
 		isViewingImage_LoadDirectory();
+		isViewingImage_LoadStylesheet();
 	}
 }else{
 	isViewingDirectory_LoadThumbnails();
@@ -151,16 +152,17 @@ function createNextPrevArrows(){
 		);
 	}
 
-	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;'},leftElm,document.body);
+	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden'},leftElm,document.body);
 
 	if(showArrows){
 		Cr.elm('img',{'title':'Next: '+getNextName(dirCurFile),
 										'src':chrome.extension.getURL('img/arrow_right.png'),
 										width:'77',events:['click',nav_next],
-										style:'position:fixed;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;'
+										style:'position:fixed;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
+										class:'printhidden'
 									},[],document.body);
 	}
-					
+
 	window.addEventListener('resize', imageViewResized);
 	window.addEventListener('keyup',wk);
 }
@@ -272,6 +274,14 @@ function isViewingImage_LoadDirectory(){
 
 function isViewingDirectory_LoadThumbnails(){
 	document.addEventListener('DOMContentLoaded', prepareThumbnailsBrowser);
+}
+
+function isViewingImage_LoadStylesheet(){
+	document.addEventListener('DOMContentLoaded', injectStyleSheet);
+}
+
+function injectStyleSheet(){
+	Cr.elm('link',{href:chrome.extension.getURL('localfiles_print.css'),rel:'stylesheet',type:'text/css',media:'print'},[],document.head);
 }
 
 function navToFileByElmName(ev){
