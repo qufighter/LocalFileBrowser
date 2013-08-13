@@ -80,6 +80,10 @@ function zoom_in(ev){
 	if(el)el.src=chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png'));
 	imageViewResizedHandler();
 }
+function handleImageJustLoaded(){
+	determineIfZoomedToFit();
+	imageViewResizedHandler();
+}
 function determineIfZoomedToFit(){
 	var im=document.body.getElementsByTagName('img')[0];
 	if(im)zoomedToFit=im.naturalWidth != im.clientWidth;
@@ -92,23 +96,29 @@ function imageViewResized(){
 function imageViewResizedHandler(){
 	var im=document.body.getElementsByTagName('img')[0];
 	if(im){
-		if(zoomedToFit){
-			var im_ratio=im.naturalWidth/im.naturalHeight;
-			var wn_ratio=window.innerWidth/window.innerHeight;
-			if(wn_ratio > im_ratio){
-				im.height = window.innerHeight;
-				im.width = window.innerHeight * im_ratio;
+		if(im.complete){
+			if(zoomedToFit){
+				var im_ratio=im.naturalWidth/im.naturalHeight;
+				var wn_ratio=window.innerWidth/window.innerHeight;
+				if(wn_ratio > im_ratio){
+					im.height = window.innerHeight;
+					im.width = window.innerHeight * im_ratio;
+				}else{
+					im.width = window.innerWidth;
+					im.height = window.innerWidth / im_ratio;
+				}
 			}else{
-				im.width = window.innerWidth;
-				im.height = window.innerWidth / im_ratio;
+				im.width = im.naturalWidth;
+				im.height = im.naturalHeight;
+			}
+			if(im.clientHeight){
+				if(im.clientHeight < window.innerHeight){
+					im.style.marginTop=Math.round((window.innerHeight - im.clientHeight) * 0.5)+'px';
+				}else im.style.marginTop='0px';
 			}
 		}else{
-			im.width = im.naturalWidth;
-			im.height = im.naturalHeight;
+			im.onload=handleImageJustLoaded;
 		}
-		if(im.clientHeight < window.innerHeight){
-			im.style.marginTop=Math.round((window.innerHeight - im.clientHeight) * 0.5)+'px';
-		}else im.style.marginTop='0px';
 	}
 }
 
