@@ -73,12 +73,12 @@ function dirLoaded(){
 	}
 };
 
-var zoomedToFit=false;
+var zoomedToFit=false,hasSizedOnce=false,localfile_zoombtn=false;
 function zoom_in(ev){
-	el=getEventTarget(ev);
 	zoomedToFit = !zoomedToFit;
-	if(el)el.src=chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png'));
-	imageViewResizedHandler();
+	var im=imageViewResizedHandler();
+	if(im)im.style.cursor=(zoomedToFit?'-webkit-zoom-out':'-webkit-zoom-in');
+//	if(localfile_zoombtn)localfile_zoombtn.src=chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png'));
 }
 function handleImageJustLoaded(){
 	determineIfZoomedToFit();
@@ -96,7 +96,7 @@ function imageViewResized(){
 function imageViewResizedHandler(){
 	var im=document.body.getElementsByTagName('img')[0];
 	if(im){
-		if(im.complete){
+		if(im.complete && im.naturalWidth && im.clientHeight){
 			if(zoomedToFit){
 				var im_ratio=im.naturalWidth/im.naturalHeight;
 				var wn_ratio=window.innerWidth/window.innerHeight;
@@ -110,6 +110,11 @@ function imageViewResizedHandler(){
 			}else{
 				im.width = im.naturalWidth;
 				im.height = im.naturalHeight;
+				if(!hasSizedOnce){
+					hasSizedOnce=true;
+					im.addEventListener('click',zoom_in);
+					im.style.cursor='-webkit-zoom-in';
+				}
 			}
 			if(im.clientHeight){
 				if(im.clientHeight < window.innerHeight){
@@ -119,6 +124,7 @@ function imageViewResizedHandler(){
 		}else{
 			im.onload=handleImageJustLoaded;
 		}
+		return im;
 	}
 }
 
@@ -151,16 +157,15 @@ function createNextPrevArrows(){
 								 }
 		)
 	);
-	if(!zoomedToFit){
-		leftElm.push(
-			Cr.elm('img',{'title':'Zoom',
-											'src':chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png')),
-											width:'77',events:['click',zoom_in],
-											style:'cursor:pointer;'
-									 }
-			)
-		);
-	}
+//	if(!zoomedToFit){
+//		localfile_zoombtn = Cr.elm('img',{'title':'Zoom',
+//											'src':chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png')),
+//											width:'77',events:['click',zoom_in],
+//											style:'cursor:pointer;'
+//									 }
+//		);
+//		leftElm.push(localfile_zoombtn);
+//	}
 
 	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden'},leftElm,document.body);
 
@@ -175,6 +180,8 @@ function createNextPrevArrows(){
 
 	window.addEventListener('resize', imageViewResized);
 	window.addEventListener('keyup',wk);
+
+	//preLoadFile(getNextName(dirCurFile));
 }
 
 function wk(ev){
@@ -302,6 +309,12 @@ function navToFileByElmName(ev){
 function navToFile(file){
 	window.location=directoryURL+file;
 	//document.getElementsByTagName('img')[0].src=directoryURL+file;
+}
+
+function preLoadFile(file){
+	var im=new Image();
+	im.onload=function(){console.log('preloaded_next'+directoryURL+file)}
+	im.src=directoryURL+file;
 }
 
 function isValidFile(f){
