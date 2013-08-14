@@ -128,6 +128,19 @@ function imageViewResizedHandler(){
 	}
 }
 
+var extraControls=[];
+function showExtraControls(){
+	for(var i in extraControls){
+		extraControls[i].style.display="inline";
+	}
+}
+
+function hideExtraControls(){
+	for(var i in extraControls){
+		extraControls[i].style.display="none";
+	}
+}
+
 function createNextPrevArrows(){
 	if(!bodyExists){
 		setTimeout(createNextPrevArrows,10);
@@ -149,25 +162,27 @@ function createNextPrevArrows(){
 			)
 		);
 	}
-	leftElm.push(
+	extraControls.push(
 		Cr.elm('img',{'title':'View Parent Directory',
 										'src':chrome.extension.getURL('img/arrow_up.png'),
 										width:'77',events:['click',nav_up],
-										style:'cursor:pointer;'
+										style:'cursor:pointer;display:none;'
 								 }
 		)
 	);
+	leftElm.push(extraControls[extraControls.length-1]);
 //	if(!zoomedToFit){
 //		localfile_zoombtn = Cr.elm('img',{'title':'Zoom',
 //											'src':chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png')),
 //											width:'77',events:['click',zoom_in],
-//											style:'cursor:pointer;'
+//											style:'cursor:pointer;display:none;'
 //									 }
 //		);
+//		extraControls.push(localfile_zoombtn);
 //		leftElm.push(localfile_zoombtn);
 //	}
 
-	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden'},leftElm,document.body);
+	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,document.body);
 
 	if(showArrows){
 		Cr.elm('img',{'title':'Next: '+getNextName(dirCurFile),
