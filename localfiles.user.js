@@ -165,7 +165,8 @@ function createNextPrevArrows(){
 	var leftElm=[];
 	if(showArrows){
 		leftElm.push(
-			Cr.elm('img',{'title':'Previous: '+getPrevName(dirCurFile),
+			Cr.elm('img',{'title':getPrevName(dirCurFile),
+												id :'previous_file',
 											'src':chrome.extension.getURL('img/arrow_left.png'),
 											width:'77',events:[['mouseup',nav_prev],['dragstart',cancelEvent]],
 											style:'cursor:pointer;vertical-align: bottom;'
@@ -176,7 +177,7 @@ function createNextPrevArrows(){
 	extraControls.push(
 		Cr.elm('img',{'title':'View Parent Directory',
 										'src':chrome.extension.getURL('img/arrow_up.png'),
-										width:'77',events:[['click',nav_up],['dragstart',cancelEvent]],
+										width:'77',events:[['click',nav_up]],
 										style:'cursor:pointer;display:none;vertical-align: bottom;'
 								 }
 		)
@@ -210,8 +211,8 @@ function createNextPrevArrows(){
 	Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,document.body);
 
 	if(showArrows){
-		Cr.elm('img',{'title':'Next: '+getNextName(dirCurFile),
-										'src':chrome.extension.getURL('img/arrow_right.png'),
+		Cr.elm('img',{'title':getNextName(dirCurFile),
+										  src:chrome.extension.getURL('img/arrow_right.png'),
 										width:'77',events:[['mouseup',nav_next],['dragstart',cancelEvent]],
 										style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
 										class:'printhidden',
@@ -247,8 +248,8 @@ function wk(ev){
 }
 function osFormatPath(path){
 	if(navigator.platform.substr(0,3)=='Win')
-		return path.substr(8).split('/').join('\\');
-	else return path.substr(8);
+		return decodeURIComponent(path.substr(8).split('/').join('\\'));
+	else return decodeURIComponent(path.substr(8));
 }
 function selectSelf(ev){
 	var elm=getEventTarget(ev);
@@ -364,7 +365,7 @@ function isViewingImage_LoadDirectory(){
 			document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
 		}
 
-		if(obj.keepurlbarworking && obj.keepurlbarworking=='true')leturlbarbreak=true;
+		if(obj.leturlbarbreak && obj.leturlbarbreak=='true')leturlbarbreak=true;
 		if(obj.fastmode && obj.fastmode=='true')fastmode=true;
 
 		//console.log('storage-loaded-parsed',new Date().getTime());
@@ -410,6 +411,7 @@ function navToFileByElmName(ev){
 	window.location=directoryURL+im.getAttribute('name');
 }
 
+var navLock=false;
 function navToFile(file,suppressPushState){
 	if(!fastmode){
 		window.location=directoryURL+file;
@@ -421,13 +423,17 @@ function navToFile(file,suppressPushState){
 
 	//document.getElementsByTagName('img')[0].src=directoryURL+file;
 	if(typeof(suppressPushState)=='undefined')suppressPushState=false;
-	startFileName=file;
+	var loadedFileName = file;
 	var origImg = document.getElementsByTagName('img')[0];
 	var origNextSibl = origImg.nextSibling;
 	var newimg = origImg.cloneNode();
 	newimg.removeAttribute('width');
 	newimg.removeAttribute('height');
 	newimg.onload=function(ev){
+		if(!origImg)return;
+		document.body.removeChild(origImg);//breaks here sometimes, but its good execution stops here too, this is when going fast and an image takes too long to load but they click next, the next image loads faster, eventually the orig image loads, it tries to remove the previous image but that one no longer exists (since the smaller image already removed it)
+		startFileName=loadedFileName;
+
 		var im=getEventTarget(ev);
 		//var ow=im.naturalWidth,oh=im.naturalHeight;
 		hasSizedOnce=true;//do not add event listener twice
@@ -437,11 +443,12 @@ function navToFile(file,suppressPushState){
 		zoomedToFit = !zoomdIsZoomedIn;
 		//perhaps an option to preserve zoomed state??
 
-		document.body.removeChild(origImg);
 		document.body.insertBefore(newimg,origNextSibl);
 		imageViewResizedHandler();
 
 		gel('os_path').value=osFormatPath(directoryURL+startFileName);
+		gel('arrowsright').title = getNextName(dirCurFile);
+		gel('previous_file').title = getPrevName(dirCurFile);
 
 		if(!suppressPushState && !leturlbarbreak){
 			try{
@@ -485,14 +492,16 @@ function nav_up(){
 	navToFile('');
 }
 
-function nav_prev(){
+function nav_prev(ev){
+	if(ev.which && ev.which == 3)return;
 	dirCurFile--;
 	if(dirCurFile < 0)dirCurFile=dirFiles.length-1;
 	if(!isValidFile(dirFiles[dirCurFile]))nav_prev()
 	else navToFile(dirFiles[dirCurFile]);
 }
 
-function nav_next(){
+function nav_next(ev){
+	if(ev.which && ev.which == 3)return;
 	dirCurFile++;
 	if(dirCurFile > dirFiles.length-1)dirCurFile=0;
 	if(!isValidFile(dirFiles[dirCurFile]))nav_next()
@@ -503,11 +512,11 @@ function getNextName(cf){
 	var d=cf+1;
 	if(d > dirFiles.length-1)d=0;
 	if(!isValidFile(dirFiles[d]))return getNextName(d);
-	else return dirFiles[d];
+	else return 'Next: '+dirFiles[d];
 }
 function getPrevName(cf){
 	var d=cf-1;
 	if(d < 0)d=dirFiles.length-1;
 	if(!isValidFile(dirFiles[d]))return getPrevName(d);
-	else return dirFiles[d];
+	else return 'Previous: '+dirFiles[d];
 }
