@@ -77,7 +77,7 @@ function dirLoaded(){
 	}
 };
 
-var zoomedToFit=false,zoomdIsZoomedIn=false,hasSizedOnce=false,localfile_zoombtn=false;
+var zoomedToFit=false,zoomdIsZoomedIn=false,imageIsNarrow=false,hasSizedOnce=false,localfile_zoombtn=false;
 function zoom_in(ev){
 	zoomedToFit = !zoomedToFit;
 	imageViewResizedHandler();
@@ -99,7 +99,8 @@ function imageViewResizedHandler(){
 	var im=document.body.getElementsByTagName('img')[0];
 	if(im){
 		if(im.complete && im.naturalWidth && im.clientHeight){
-			zoomdIsZoomedIn = im.naturalWidth < window.innerWidth && im.naturalHeight < window.innerHeight;
+			imageIsNarrow = im.naturalWidth < window.innerWidth;
+			zoomdIsZoomedIn = imageIsNarrow && im.naturalHeight < window.innerHeight;
 			if(zoomedToFit){
 				var im_ratio=im.naturalWidth/im.naturalHeight;
 				var wn_ratio=window.innerWidth/window.innerHeight;
@@ -222,10 +223,10 @@ function hid(){
 	gel('arrowsright').style.opacity="0";
 }
 function wk(ev){
-	if(ev.keyCode==37 || ev.keyCode==38){//up left
-		nav_prev();
-	}else if(ev.keyCode==39||ev.keyCode==40){//down right
-		nav_next();
+	if(ev.keyCode==37){//left
+		if(zoomdIsZoomedIn || imageIsNarrow || zoomedToFit) nav_prev();
+	}else if(ev.keyCode==39){//right
+		if(zoomdIsZoomedIn || imageIsNarrow || zoomedToFit) nav_next();
 	}else if(ev.keyCode==32){//space
 		zoom_in();
 	}
