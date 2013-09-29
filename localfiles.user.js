@@ -355,13 +355,18 @@ function prepareThumbnailsBrowser(){
 	Cr.elm('button',{id:'loadThumbsBtn',events:['click',createThumbnailsBrowser]},[Cr.txt('Show Thumbnails...')],document.body)
 }
 
+var leturlbarbreak=false,fastmode=false;
 function isViewingImage_LoadDirectory(){
 
 	chrome.storage.local.get(null,function(obj){
 		//obj.bodystyle='background-color:grey;';
-		if(obj.bodystyle){
+		if(obj.bodystyle && obj.bodystyle.length > 0){
 			document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
 		}
+
+		if(obj.keepurlbarworking && obj.keepurlbarworking=='true')leturlbarbreak=true;
+		if(obj.fastmode && obj.fastmode=='true')fastmode=true;
+
 		//console.log('storage-loaded-parsed',new Date().getTime());
 		if(obj.dir_url == directoryURL){
 			var dirCachedFiles=JSON.parse(obj.dir_cache);
@@ -406,9 +411,10 @@ function navToFileByElmName(ev){
 }
 
 function navToFile(file,suppressPushState){
-	window.location=directoryURL+file;
-	return;
-
+	if(!fastmode){
+		window.location=directoryURL+file;
+		return;
+	}
 	//this would be WAY better!  unfortunately:
 	//"A history state object with URL 'http://webifire/' cannot be created in a document with origin 'null'."
 	// - we can load the next image without reloading the page - we CANNOT update the URL :/...
@@ -437,21 +443,22 @@ function navToFile(file,suppressPushState){
 
 		gel('os_path').value=osFormatPath(directoryURL+startFileName);
 
-		if(!suppressPushState){
+		if(!suppressPushState && !leturlbarbreak){
 			try{
 				//document.origin='thebannanarepublic';
 				//run this when we first load:
 				//history.replaceState({filename:startFileName},document.title,window.location.href);
 				history.pushState({filename:startFileName},startFileName,newimg.src);
-				newimg.addEventListener('click',zoom_in);
-				//now refrsh our copy of the directory listing....
-				fetchNewDirectoryListingRequest();
-				//don't do this every time! slows things down!
 			}catch(e){
 				console.log('SORRY cannot update window URL :/ - SecurityError: A history state object cannot be created in a document with origin \'null\'.');
 				window.location=directoryURL+startFileName;
+				return;
 			}
 		}
+		newimg.addEventListener('click',zoom_in);
+		//now refrsh our copy of the directory listing....
+		fetchNewDirectoryListingRequest();
+		//don't do this every time! slows things down!
 	}
 	newimg.src=directoryURL+file;
 }
