@@ -167,8 +167,8 @@ function createNextPrevArrows(){
 		leftElm.push(
 			Cr.elm('img',{'title':'Previous: '+getPrevName(dirCurFile),
 											'src':chrome.extension.getURL('img/arrow_left.png'),
-											width:'77',events:['click',nav_prev],
-											style:'cursor:pointer;'
+											width:'77',events:[['mouseup',nav_prev],['dragstart',cancelEvent]],
+											style:'cursor:pointer;vertical-align: bottom;'
 									 }
 			)
 		);
@@ -176,12 +176,26 @@ function createNextPrevArrows(){
 	extraControls.push(
 		Cr.elm('img',{'title':'View Parent Directory',
 										'src':chrome.extension.getURL('img/arrow_up.png'),
-										width:'77',events:['click',nav_up],
-										style:'cursor:pointer;display:none;'
+										width:'77',events:[['click',nav_up],['dragstart',cancelEvent]],
+										style:'cursor:pointer;display:none;vertical-align: bottom;'
 								 }
 		)
 	);
 	leftElm.push(extraControls[extraControls.length-1]);
+
+	extraControls.push(
+		Cr.elm('input',{'type':'text',
+										id:'os_path',
+										readonly:'readonly',
+										title:'Current Image Path',
+										'value':osFormatPath(directoryURL+startFileName),
+										events:['mouseover',selectSelf,true],
+										style:'cursor:text;display:none;width:350px;padding:8px;margin:10px;box-shadow:3px 3px 15px #444;margin-right:100px;'
+								 }
+		)
+	);
+	leftElm.push(extraControls[extraControls.length-1]);
+
 //	if(!zoomedToFit){
 //		localfile_zoombtn = Cr.elm('img',{'title':'Zoom',
 //											'src':chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png')),
@@ -198,7 +212,7 @@ function createNextPrevArrows(){
 	if(showArrows){
 		Cr.elm('img',{'title':'Next: '+getNextName(dirCurFile),
 										'src':chrome.extension.getURL('img/arrow_right.png'),
-										width:'77',events:['click',nav_next],
+										width:'77',events:[['mouseup',nav_next],['dragstart',cancelEvent]],
 										style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
 										class:'printhidden',
 										id:'arrowsright'
@@ -231,7 +245,17 @@ function wk(ev){
 		zoom_in();
 	}
 }
-
+function osFormatPath(path){
+	if(navigator.platform.substr(0,3)=='Win')
+		return path.substr(8).split('/').join('\\');
+	else return path.substr(8);
+}
+function selectSelf(ev){
+	var elm=getEventTarget(ev);
+	setTimeout(function(){
+		elm.select();
+	},10);//or prevent bubble
+}
 function gel(n){
 		return document.getElementById(n);
 }
@@ -243,6 +267,17 @@ function getEventTarget(ev){
 	        targ=targ.parentNode;
 	}
 	return targ;
+}
+function cancelEvent(e){
+  e = e ? e : window.event;
+  if(e.stopPropagation)
+    e.stopPropagation();
+  if(e.preventDefault)
+    e.preventDefault();
+  e.cancelBubble = true;
+  e.cancel = true;
+  //e.returnValue = false;
+  return false;
 }
 function getOffset( el ){
     var _x=0,_y=0;
@@ -399,6 +434,8 @@ function navToFile(file,suppressPushState){
 		document.body.removeChild(origImg);
 		document.body.insertBefore(newimg,origNextSibl);
 		imageViewResizedHandler();
+
+		gel('os_path').value=osFormatPath(directoryURL+startFileName);
 
 		if(!suppressPushState){
 			try{
