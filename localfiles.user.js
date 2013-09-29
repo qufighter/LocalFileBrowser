@@ -80,7 +80,7 @@ function dirLoaded(){
 var zoomedToFit=false,zoomdIsZoomedIn=false,imageIsNarrow=false,hasSizedOnce=false,localfile_zoombtn=false;
 function zoom_in(ev){
 	zoomedToFit = !zoomedToFit;
-	imageViewResizedHandler();
+	imageViewResizedHandler(ev);
 }
 function handleImageJustLoaded(){
 	determineIfZoomedToFit();
@@ -95,7 +95,7 @@ function imageViewResized(){
 	clearTimeout(imgViewResizedTimeout);
 	imgViewResizedTimeout=setTimeout(imageViewResizedHandler,250);
 }
-function imageViewResizedHandler(){
+function imageViewResizedHandler(ev){
 	var im=document.body.getElementsByTagName('img')[0];
 	if(im){
 		if(im.complete && im.naturalWidth && im.clientHeight){
@@ -118,6 +118,14 @@ function imageViewResizedHandler(){
 					hasSizedOnce=true;
 					im.addEventListener('click',zoom_in);
 					im.style.cursor='-webkit-zoom-in';
+				}
+				if( typeof(ev) != 'undefined' &&  ev.clientX){
+					//we clicked in a particular spot, make it happen!
+					console.log(ev);
+					window.scroll(
+						((ev.clientX/window.innerWidth)*im.offsetWidth)-(window.innerWidth*0.5),
+						((ev.clientY/window.innerHeight)*im.offsetHeight)-(window.innerHeight*0.5)
+					);
 				}
 			}
 			if(im.clientHeight){
@@ -411,7 +419,6 @@ function navToFileByElmName(ev){
 	window.location=directoryURL+im.getAttribute('name');
 }
 
-var navLock=false;
 function navToFile(file,suppressPushState){
 	if(!fastmode){
 		window.location=directoryURL+file;
@@ -493,7 +500,7 @@ function nav_up(){
 }
 
 function nav_prev(ev){
-	if(ev.which && ev.which == 3)return;
+	if(ev && ev.which && ev.which == 3)return;
 	dirCurFile--;
 	if(dirCurFile < 0)dirCurFile=dirFiles.length-1;
 	if(!isValidFile(dirFiles[dirCurFile]))nav_prev()
@@ -501,7 +508,7 @@ function nav_prev(ev){
 }
 
 function nav_next(ev){
-	if(ev.which && ev.which == 3)return;
+	if(ev && ev.which && ev.which == 3)return;
 	dirCurFile++;
 	if(dirCurFile > dirFiles.length-1)dirCurFile=0;
 	if(!isValidFile(dirFiles[dirCurFile]))nav_next()
