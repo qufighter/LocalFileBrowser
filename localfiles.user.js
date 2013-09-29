@@ -466,6 +466,7 @@ function navToFile(file,suppressPushState){
 			}catch(e){
 				console.log('SORRY cannot update window URL :/ - SecurityError: A history state object cannot be created in a document with origin \'null\'.');
 				window.location=directoryURL+startFileName;
+				throw(e);
 				return;
 			}
 		}
