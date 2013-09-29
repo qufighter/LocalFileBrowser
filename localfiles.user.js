@@ -42,6 +42,7 @@ if(!document.body){
 }
 
 function processFileRows(resp){
+	var newDirFiles=[];
 	var rows=resp.split('addRow("');
 	for(var i=1,l=rows.length;i<l;i++){
 
@@ -51,16 +52,19 @@ function processFileRows(resp){
 		if(f != '..'){
 			if(!isValidFile(f))continue;
 			if(f==startFileName){
-				dirCurFile=dirFiles.length;
+				dirCurFile=newDirFiles.length;
 			}
-			dirFiles.push(f);
+			newDirFiles.push(f);
 		}
 	}
 
+	dirFiles = newDirFiles;
 	if(dirCurFile > -1){
 		createNextPrevArrows();
 	}
 
+	//console.log('httpreq-loaded-parsed',new Date().getTime(),startFileName,dirCurFile);
+	chrome.storage.local.set({'dir_url':directoryURL,'dir_cache':JSON.stringify(dirFiles)},function(){});
 //	console.log(dirFiles);
 //	console.log(dirCurFile);
 //	console.log(startFileName);
@@ -73,12 +77,10 @@ function dirLoaded(){
 	}
 };
 
-var zoomedToFit=false,hasSizedOnce=false,localfile_zoombtn=false;
+var zoomedToFit=false,zoomdIsZoomedIn=false,hasSizedOnce=false,localfile_zoombtn=false;
 function zoom_in(ev){
 	zoomedToFit = !zoomedToFit;
-	var im=imageViewResizedHandler();
-	if(im)im.style.cursor=(zoomedToFit?'-webkit-zoom-out':'-webkit-zoom-in');
-//	if(localfile_zoombtn)localfile_zoombtn.src=chrome.extension.getURL('img/'+(zoomedToFit?'zoom_out.png':'zoom_in.png'));
+	imageViewResizedHandler();
 }
 function handleImageJustLoaded(){
 	determineIfZoomedToFit();
@@ -97,6 +99,7 @@ function imageViewResizedHandler(){
 	var im=document.body.getElementsByTagName('img')[0];
 	if(im){
 		if(im.complete && im.naturalWidth && im.clientHeight){
+			zoomdIsZoomedIn = im.naturalWidth < window.innerWidth && im.naturalHeight < window.innerHeight;
 			if(zoomedToFit){
 				var im_ratio=im.naturalWidth/im.naturalHeight;
 				var wn_ratio=window.innerWidth/window.innerHeight;
@@ -121,10 +124,13 @@ function imageViewResizedHandler(){
 					im.style.marginTop=Math.round((window.innerHeight - im.clientHeight) * 0.5)+'px';
 				}else im.style.marginTop='0px';
 			}
+			if( zoomdIsZoomedIn )
+				im.style.cursor=(zoomedToFit?'-webkit-zoom-out':'-webkit-zoom-in');
+			else
+				im.style.cursor=(zoomedToFit?'-webkit-zoom-in':'-webkit-zoom-out');
 		}else{
 			im.onload=handleImageJustLoaded;
 		}
-		return im;
 	}
 }
 
@@ -141,11 +147,15 @@ function hideExtraControls(){
 	}
 }
 
+var arrowsCreated=false;
 function createNextPrevArrows(){
+	if(arrowsCreated)return;
 	if(!bodyExists){
 		setTimeout(createNextPrevArrows,10);
 		return;
 	}
+	arrowsCreated=true;
+
 	document.body.style.textAlign='center';
 	determineIfZoomedToFit();
 	imageViewResizedHandler();
@@ -182,23 +192,35 @@ function createNextPrevArrows(){
 //		leftElm.push(localfile_zoombtn);
 //	}
 
-	Cr.elm('div',{style:'position:fixed;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,document.body);
+	Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,document.body);
 
 	if(showArrows){
 		Cr.elm('img',{'title':'Next: '+getNextName(dirCurFile),
 										'src':chrome.extension.getURL('img/arrow_right.png'),
 										width:'77',events:['click',nav_next],
-										style:'position:fixed;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
-										class:'printhidden'
+										style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
+										class:'printhidden',
+										id:'arrowsright'
 									},[],document.body);
 	}
 
+	window.addEventListener('mousemove', mmov);
 	window.addEventListener('resize', imageViewResized);
 	window.addEventListener('keyup',wk);
-
+	window.addEventListener('popstate',navigationStatePop);
 	//preLoadFile(getNextName(dirCurFile));
 }
-
+function mmov(){
+	gel('arrowsleft').style.opacity="1",
+	gel('arrowsright').style.opacity="1";
+	clearTimeout(hidTimeout);
+	hidTimeout=setTimeout(hid,1000);
+}
+var hidTimeout=0;
+function hid(){
+	gel('arrowsleft').style.opacity="0",
+	gel('arrowsright').style.opacity="0";
+}
 function wk(ev){
 	if(ev.keyCode==37 || ev.keyCode==38){//up left
 		nav_prev();
@@ -298,6 +320,32 @@ function prepareThumbnailsBrowser(){
 }
 
 function isViewingImage_LoadDirectory(){
+
+	chrome.storage.local.get(null,function(obj){
+		//obj.bodystyle='background-color:grey;';
+		if(obj.bodystyle){
+			document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
+		}
+		//console.log('storage-loaded-parsed',new Date().getTime());
+		if(obj.dir_url == directoryURL){
+			var dirCachedFiles=JSON.parse(obj.dir_cache);
+			if( dirCachedFiles.length > 0 ){
+				dirFiles=dirCachedFiles;
+				for(var i=0,l=dirFiles.length;i<l;i++){
+					if(dirFiles[i]==startFileName){
+						//console.log('found current file in cache!');
+						dirCurFile=i;
+						createNextPrevArrows();
+						break;
+					}
+				}
+			}
+		}
+	});
+	fetchNewDirectoryListingRequest();
+}
+
+function fetchNewDirectoryListingRequest(){
 	http = new XMLHttpRequest();
 	http.open("GET",directoryURL);
 	http.onreadystatechange=dirLoaded;
@@ -321,9 +369,61 @@ function navToFileByElmName(ev){
 	window.location=directoryURL+im.getAttribute('name');
 }
 
-function navToFile(file){
+function navToFile(file,suppressPushState){
 	window.location=directoryURL+file;
+	return;
+
+	//this would be WAY better!  unfortunately:
+	//"A history state object with URL 'http://webifire/' cannot be created in a document with origin 'null'."
+	// - we can load the next image without reloading the page - we CANNOT update the URL :/...
+
 	//document.getElementsByTagName('img')[0].src=directoryURL+file;
+	if(typeof(suppressPushState)=='undefined')suppressPushState=false;
+	startFileName=file;
+	var origImg = document.getElementsByTagName('img')[0];
+	var origNextSibl = origImg.nextSibling;
+	var newimg = origImg.cloneNode();
+	newimg.removeAttribute('width');
+	newimg.removeAttribute('height');
+	newimg.onload=function(ev){
+		var im=getEventTarget(ev);
+		//var ow=im.naturalWidth,oh=im.naturalHeight;
+		hasSizedOnce=true;//do not add event listener twice
+
+		//based on if we are zoomed in or not lets pick a reasonable zoom to fit value?
+		zoomdIsZoomedIn = im.naturalWidth < window.innerWidth && im.naturalHeight < window.innerHeight;
+		zoomedToFit = !zoomdIsZoomedIn;
+		//perhaps an option to preserve zoomed state??
+
+		document.body.removeChild(origImg);
+		document.body.insertBefore(newimg,origNextSibl);
+		imageViewResizedHandler();
+
+		if(!suppressPushState){
+			try{
+				//document.origin='thebannanarepublic';
+				//run this when we first load:
+				//history.replaceState({filename:startFileName},document.title,window.location.href);
+				history.pushState({filename:startFileName},startFileName,newimg.src);
+				newimg.addEventListener('click',zoom_in);
+				//now refrsh our copy of the directory listing....
+				fetchNewDirectoryListingRequest();
+				//don't do this every time! slows things down!
+			}catch(e){
+				console.log('SORRY cannot update window URL :/ - SecurityError: A history state object cannot be created in a document with origin \'null\'.');
+				window.location=directoryURL+startFileName;
+			}
+		}
+	}
+	newimg.src=directoryURL+file;
+}
+
+function navigationStatePop(ev){//NOT implemented (cannot trigger, cannot replace state)
+	if(ev && ev.type && ev.type == 'popstate'){
+		if(ev.state && ev.state.filename){
+			navToFile(ev.state.filename,true);
+		}
+	}
 }
 
 function preLoadFile(file){

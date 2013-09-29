@@ -24,7 +24,7 @@
      "img/zoom_out.png"
    ],
    "permissions": [
-      "tabs", "<all_urls>"
+      "tabs", "storage", "<all_urls>"
    ],
    "version": "0.0.0.5"
 }
