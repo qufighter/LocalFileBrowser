@@ -37,14 +37,14 @@ function begin(){
 				Cr.elm('input',{type:'checkbox',id:'fastmode',checked:(stor.fastmode=='true'?'checked':''),valuebinding:'checked',dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]}),
 				Cr.txt(' "Fast" Mode')
 			]),
-			Cr.elm('label',{id:'opt_leturlbarbreak',style:'margin-left:15px;display:'+(stor.fastmode=='true'?'block':'none')+';'},[
+			Cr.elm('label',{id:'opt_leturlbarbreak',style:'margin-left:15px;display:'+(stor.fastmode=='true'?'block':'none')+';',title:'history.pushState does not work on file:// url because the function that determines the origin doesn\'t work on file URLs.'},[
 				Cr.elm('input',{type:'checkbox',id:'leturlbarbreak',checked:(stor.leturlbarbreak=='true'?'checked':''),valuebinding:'checked'}),
 				Cr.txt(' Let url bar and back buttons break (faster yet, less flicker, broken URL bar)')
 			]),
 			Cr.elm('label',{},[
 				Cr.txt('Body CSS '),
 				Cr.elm('input',{type:'text',id:'bodystyle',value:stor.bodystyle,valuebinding:'value'}),
-				Cr.elm('span',{style:'color:grey;'},[Cr.txt(' background-color:grey;')])
+				Cr.elm('span',{style:'color:grey;'},[Cr.txt(' background-color:white;')])
 			]),
 			Cr.elm('input',{type:'button',value:'Save',event:['click',saveSettings]})
 		],gel('options'));

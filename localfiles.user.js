@@ -199,7 +199,7 @@ function createNextPrevArrows(){
 										title:'Current Image Path',
 										'value':osFormatPath(directoryURL+startFileName),
 										events:['mouseover',selectSelf,true],
-										style:'cursor:text;display:none;width:350px;padding:8px;margin:10px;box-shadow:3px 3px 15px #444;margin-right:100px;'
+										style:'cursor:text;display:none;width:350px;padding:8px;margin:10px;box-shadow:3px 3px 15px #444;margin-right:100px;direction:rtl;'
 								 }
 		)
 	);
