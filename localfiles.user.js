@@ -226,9 +226,9 @@ function createNextPrevArrows(){
 										class:'printhidden',
 										id:'arrowsright'
 									},[],document.body);
+		window.addEventListener('mousemove', mmov);
 	}
 
-	window.addEventListener('mousemove', mmov);
 	window.addEventListener('resize', imageViewResized);
 	window.addEventListener('keyup',wk);
 	window.addEventListener('popstate',navigationStatePop);
