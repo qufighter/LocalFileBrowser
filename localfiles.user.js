@@ -206,12 +206,13 @@ function createNextPrevArrows(){
 		)
 	);
 	leftElm.push(extraControls[extraControls.length-1]);
+
 	extraControls.push(
 		Cr.elm('input',{'type':'button',
 										value:'Go',
 										title:'Navigate URL bar to current path',
 										events:['click',winLocGoCurrent,true],
-										style:'position:relative;left:-100px;'
+										style:'position:relative;left:-100px;display:none;'
 								 }
 		)
 	);
@@ -518,7 +519,7 @@ function isValidFile(f){
 }
 
 function nav_up(){
-	navToFile('');
+	window.location=directoryURL;
 }
 
 function nav_prev(ev){
