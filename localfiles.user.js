@@ -1,5 +1,5 @@
 var bodyExists=false;
-var directoryURL=window.location.href;
+var directoryURL=window.location.protocol + '//' + window.location.pathname;
 var startFileName='';
 var dirFiles = [];
 var dirCurFile = -1;
@@ -11,6 +11,9 @@ if(directoryURL.substr(directoryURL.length-1,1)!='/'){
 		startFileName=dirparts[dirparts.length-1];
 		dirparts.splice(dirparts.length-1,1);
 		directoryURL=dirparts.join('/')+'/';
+		if( window.location.hash.replace('#','').length ){
+			navigationStateHashChange();
+		}
 		isViewingImage_LoadDirectory();
 		isViewingImage_LoadStylesheet();
 	}
@@ -121,7 +124,6 @@ function imageViewResizedHandler(ev){
 				}
 				if( typeof(ev) != 'undefined' &&  ev.clientX){
 					//we clicked in a particular spot, make it happen!
-					console.log(ev);
 					window.scroll(
 						((ev.clientX/window.innerWidth)*im.offsetWidth)-(window.innerWidth*0.5),
 						((ev.clientY/window.innerHeight)*im.offsetHeight)-(window.innerHeight*0.5)
@@ -204,6 +206,16 @@ function createNextPrevArrows(){
 		)
 	);
 	leftElm.push(extraControls[extraControls.length-1]);
+	extraControls.push(
+		Cr.elm('input',{'type':'button',
+										value:'Go',
+										title:'Navigate URL bar to current path',
+										events:['click',winLocGoCurrent,true],
+										style:'position:relative;left:-100px;'
+								 }
+		)
+	);
+	leftElm.push(extraControls[extraControls.length-1]);
 
 //	if(!zoomedToFit){
 //		localfile_zoombtn = Cr.elm('img',{'title':'Zoom',
@@ -232,6 +244,7 @@ function createNextPrevArrows(){
 	window.addEventListener('resize', imageViewResized);
 	window.addEventListener('keyup',wk);
 	window.addEventListener('popstate',navigationStatePop);
+	window.addEventListener('hashchange',navigationStateHashChange);
 	//preLoadFile(getNextName(dirCurFile));
 }
 function mmov(){
@@ -364,7 +377,7 @@ function prepareThumbnailsBrowser(){
 	Cr.elm('button',{id:'loadThumbsBtn',events:['click',createThumbnailsBrowser]},[Cr.txt('Show Thumbnails...')],document.body)
 }
 
-var leturlbarbreak=false,fastmode=false;
+var fastmode=false;
 function isViewingImage_LoadDirectory(){
 
 	chrome.storage.local.get(null,function(obj){
@@ -373,7 +386,6 @@ function isViewingImage_LoadDirectory(){
 			document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
 		}
 
-		if(obj.leturlbarbreak && obj.leturlbarbreak=='true')leturlbarbreak=true;
 		if(obj.fastmode && obj.fastmode=='true')fastmode=true;
 
 		//console.log('storage-loaded-parsed',new Date().getTime());
@@ -419,6 +431,10 @@ function navToFileByElmName(ev){
 	window.location=directoryURL+im.getAttribute('name');
 }
 
+function winLocGoCurrent(){
+	window.location=directoryURL+startFileName;
+}
+
 function navToFile(file,suppressPushState){
 	if(!fastmode){
 		window.location=directoryURL+file;
@@ -457,17 +473,16 @@ function navToFile(file,suppressPushState){
 		gel('arrowsright').title = getNextName(dirCurFile);
 		gel('previous_file').title = getPrevName(dirCurFile);
 
-		if(!suppressPushState && !leturlbarbreak){
+		if(!suppressPushState){
 			try{
 				//document.origin='thebannanarepublic';
 				//run this when we first load:
 				//history.replaceState({filename:startFileName},document.title,window.location.href);
 				history.pushState({filename:startFileName},startFileName,newimg.src);
 			}catch(e){
-				console.log('SORRY cannot update window URL :/ - SecurityError: A history state object cannot be created in a document with origin \'null\'.');
-				window.location=directoryURL+startFileName;
-				throw(e);
-				return;
+				//console.log('SORRY cannot update window URL :/ - SecurityError: A history state object cannot be created in a document with origin \'null\'.');
+				//window.location=directoryURL+startFileName;
+				window.location.hash = startFileName;
 			}
 		}
 		newimg.addEventListener('click',zoom_in);
@@ -483,6 +498,12 @@ function navigationStatePop(ev){//NOT implemented (cannot trigger, cannot replac
 		if(ev.state && ev.state.filename){
 			navToFile(ev.state.filename,true);
 		}
+	}
+}
+function navigationStateHashChange(ev){
+	var fname = window.location.hash.replace('#','');
+	if( startFileName != fname){
+		navToFile(fname,true);
 	}
 }
 
