@@ -50,27 +50,54 @@ function processFileRows(resp){
 	for(var i=1,l=rows.length;i<l;i++){
 
 		var st=rows[i].indexOf('","')+3;
-		var f=rows[i].substr(st,rows[i].indexOf('"',st)-st);
+		var f=rows[i].substr(st,rows[i].indexOf('",',st)-st);
 
 		if(f != '..'){
 			if(!isValidFile(f))continue;
 			if(f==startFileName){
 				dirCurFile=newDirFiles.length;
 			}
-			newDirFiles.push(f);
+			var meta = rows[i].split(',');
+			var date = meta[4].split('"')[1];
+			var size = meta[3].split('"')[1];//convert to kb
+			newDirFiles.push({file_name:f,date:date});
 		}
 	}
 
 	dirFiles = newDirFiles;
+	//determineSort();
+
 	if(dirCurFile > -1){
 		createNextPrevArrows();
 	}
 
+	
 	//console.log('httpreq-loaded-parsed',new Date().getTime(),startFileName,dirCurFile);
 	chrome.storage.local.set({'dir_url':directoryURL,'dir_cache':JSON.stringify(dirFiles)},function(){});
 //	console.log(dirFiles);
 //	console.log(dirCurFile);
 //	console.log(startFileName);
+}
+
+function determineSort(){
+	dirFiles = dirFiles.sort(sortby_date_reverse);
+	for(var i=0,l=dirFiles.length;i<l;i++){
+		if(dirFiles[i].file_name==startFileName){
+			dirCurFile=i;
+		}
+	}
+}
+function sortby_date(a,b){
+	return (new Date(a.date)).getTime() - (new Date(b.date)).getTime();
+}
+function sortby_date_reverse(a,b){
+	return -sortby_date(a,b);
+}
+function sortby_filename(a,b){
+	return a.file_name.localeCompare(b.file_name);
+}
+function sortby_filename_reverse(a,b){
+	return -sortby_filename(a,b);
 }
 
 function dirLoaded(){
@@ -341,7 +368,7 @@ function anImageLoaded(ev){
 }
 
 function loadDirFileIdToCvs(dirId){
-	Cr.elm('img',{loadevent:['load',anImageLoaded],id:dirId,src:directoryURL+dirFiles[dirId]});
+	Cr.elm('img',{loadevent:['load',anImageLoaded],id:dirId,src:directoryURL+dirFiles[dirId].file_name});
 }
 
 var pageScrTimeout=0;
@@ -364,8 +391,8 @@ function createThumbnailsBrowser(){
 	window.addEventListener('resize', pageScrolled);
 	processFileRows(document.body.innerHTML);
 	for(var i=0,l=dirFiles.length;i<l;i++){
-		if(isValidFile(dirFiles[i])){
-			var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i],'name':dirFiles[i],width:75,height:75,style:'display:inline-block;cursor:pointer;',events:['click',navToFileByElmName]},[],document.body);
+		if(isValidFile(dirFiles[i].file_name)){
+			var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;',events:['click',navToFileByElmName]},[],document.body);
 			if(isElementInView(c)){
 				loadDirFileIdToCvs(i);
 			}else{
@@ -395,7 +422,7 @@ function isViewingImage_LoadDirectory(){
 			if( dirCachedFiles.length > 0 ){
 				dirFiles=dirCachedFiles;
 				for(var i=0,l=dirFiles.length;i<l;i++){
-					if(dirFiles[i]==startFileName){
+					if(dirFiles[i].file_name==startFileName){
 						//console.log('found current file in cache!');
 						dirCurFile=i;
 						createNextPrevArrows();
@@ -526,27 +553,27 @@ function nav_prev(ev){
 	if(ev && ev.which && ev.which == 3)return;
 	dirCurFile--;
 	if(dirCurFile < 0)dirCurFile=dirFiles.length-1;
-	if(!isValidFile(dirFiles[dirCurFile]))nav_prev()
-	else navToFile(dirFiles[dirCurFile]);
+	if(!isValidFile(dirFiles[dirCurFile].file_name))nav_prev()
+	else navToFile(dirFiles[dirCurFile].file_name);
 }
 
 function nav_next(ev){
 	if(ev && ev.which && ev.which == 3)return;
 	dirCurFile++;
 	if(dirCurFile > dirFiles.length-1)dirCurFile=0;
-	if(!isValidFile(dirFiles[dirCurFile]))nav_next()
-	else navToFile(dirFiles[dirCurFile]);
+	if(!isValidFile(dirFiles[dirCurFile].file_name))nav_next()
+	else navToFile(dirFiles[dirCurFile].file_name);
 }
 
 function getNextName(cf){
 	var d=cf+1;
 	if(d > dirFiles.length-1)d=0;
-	if(!isValidFile(dirFiles[d]))return getNextName(d);
-	else return 'Next: '+dirFiles[d];
+	if(!isValidFile(dirFiles[d].file_name))return getNextName(d);
+	else return 'Next: '+dirFiles[d].file_name;
 }
 function getPrevName(cf){
 	var d=cf-1;
 	if(d < 0)d=dirFiles.length-1;
-	if(!isValidFile(dirFiles[d]))return getPrevName(d);
-	else return 'Previous: '+dirFiles[d];
+	if(!isValidFile(dirFiles[d].file_name))return getPrevName(d);
+	else return 'Previous: '+dirFiles[d].file_name;
 }
