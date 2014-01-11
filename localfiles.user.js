@@ -144,11 +144,6 @@ function imageViewResizedHandler(ev){
 			}else{
 				im.width = im.naturalWidth;
 				im.height = im.naturalHeight;
-				if(!hasSizedOnce){
-					hasSizedOnce=true;
-					im.addEventListener('click',zoom_in);
-					im.style.cursor='-webkit-zoom-in';
-				}
 				if( typeof(ev) != 'undefined' &&  ev.clientX){
 					//we clicked in a particular spot, make it happen!
 					window.scroll(
@@ -156,6 +151,11 @@ function imageViewResizedHandler(ev){
 						((ev.clientY/window.innerHeight)*im.offsetHeight)-(window.innerHeight*0.5)
 					);
 				}
+			}
+			if(!hasSizedOnce){
+				hasSizedOnce=true;
+				im.addEventListener('click',zoom_in);
+				im.style.cursor='-webkit-zoom-'+(zoomedToFit?'out':'in');
 			}
 			if(im.clientHeight){
 				if(im.clientHeight < window.innerHeight){
