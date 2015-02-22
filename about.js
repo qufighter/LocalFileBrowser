@@ -11,14 +11,15 @@ function gel(l){
 
 function parseElementValue(elm){
 	//console.log(elm.id, elm.value, elm.getAttribute('valuebinding'), elm[elm.getAttribute('valuebinding')].toString());
-	if( elm.getAttribute('valuebinding') ) return elm[elm.getAttribute('valuebinding')].toString();
-	if( elm.value ) return elm.value;
+	if( elm.getAttribute('valuebinding') ) return elm[elm.getAttribute('valuebinding')].toString().trim();
+	if( elm.value ) return elm.value.trim();
 }
 
 function saveSettings(){
 	chrome.storage.local.set({
 		//leturlbarbreak:parseElementValue(gel('leturlbarbreak')),
 		fastmode:parseElementValue(gel('fastmode')),
+		matchfiles:parseElementValue(gel('matchfiles')),
 		bodystyle:parseElementValue(gel('bodystyle'))
 	},function(){});
 }
@@ -34,7 +35,7 @@ function applyDependsTrue(ev){
 }
 
 function begin(){
-	chrome.storage.local.get({leturlbarbreak:'false',fastmode:'false',bodystyle:''},function(stor){
+	chrome.storage.local.get({leturlbarbreak:'false',fastmode:'false',bodystyle:'',matchfiles:'.JPG|.GIF|.PNG|.JPEG'},function(stor){
 		
 		Cr.elm('div',{class:'label_rows'},[
 			Cr.elm('label',{},[
@@ -48,7 +49,13 @@ function begin(){
 			Cr.elm('label',{},[
 				Cr.txt('Body CSS '),
 				Cr.elm('input',{type:'text',id:'bodystyle',value:stor.bodystyle,valuebinding:'value'}),
-				Cr.elm('span',{style:'color:grey;'},[Cr.txt(' background-color:white;')])
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' background-color:white;')])
+			]),
+			Cr.elm('label',{},[
+				Cr.txt('Match Files'),
+				Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')]),
+				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' .JPG|.GIF|.PNG|.JPEG')])
 			]),
 			Cr.elm('input',{type:'button',value:'Save',event:['click',saveSettings]})
 		],gel('options'));

@@ -4,9 +4,27 @@ var startFileName='';
 var dirFiles = [];
 var dirCurFile = -1;
 var timeoutId=0;
+var allowedExt = '.JPG|.GIF|.PNG|.JPEG';
+var fileUrlInitComplete = false;
+
+chrome.storage.local.get({matchfiles:false},function(obj){
+	if( obj.matchfiles && obj.matchfiles.length ){
+		allowedExt = obj.matchfiles;
+		if( !fileUrlInitComplete ){
+			initFileUrl();
+		}
+	}
+});
 
 if(directoryURL.substr(directoryURL.length-1,1)!='/'){
+	initFileUrl();
+}else{
+	isViewingDirectory_LoadThumbnails();
+}
+
+function initFileUrl(){
 	if(isValidFile(directoryURL)){
+		fileUrlInitComplete=true;
 		var dirparts=directoryURL.split('/');
 		startFileName=dirparts[dirparts.length-1];
 		dirparts.splice(dirparts.length-1,1);
@@ -17,8 +35,6 @@ if(directoryURL.substr(directoryURL.length-1,1)!='/'){
 		isViewingImage_LoadDirectory();
 		isViewingImage_LoadStylesheet();
 	}
-}else{
-	isViewingDirectory_LoadThumbnails();
 }
 
 function setApplyStyles(){
@@ -542,7 +558,8 @@ function preLoadFile(file){
 }
 
 function isValidFile(f){
-	return f.match(/(.JPG|.GIF|.PNG|.JPEG)$/gi);
+	var rx = new RegExp("("+allowedExt+")$",'gi');
+	return f.match(rx);
 }
 
 function nav_up(){
