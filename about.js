@@ -20,6 +20,7 @@ function saveSettings(){
 		//leturlbarbreak:parseElementValue(gel('leturlbarbreak')),
 		fastmode:parseElementValue(gel('fastmode')),
 		matchfiles:parseElementValue(gel('matchfiles')),
+		sorttype:parseElementValue(gel('sorttype')),
 		bodystyle:parseElementValue(gel('bodystyle'))
 	},function(){});
 }
@@ -34,9 +35,23 @@ function applyDependsTrue(ev){
 	}
 }
 
+function getSortTypeOptions(curVal){
+	var sortTypes=[
+		{type: "filename", name: "Filename A-Z"},
+		{type: "filename_reverse", name: "Filename Z-A"},
+		{type: "date_desc", name: "Date Modified From Newest"},
+		{type: "date_asc", name: "Date Modified From Oldest"},
+	];
+	var sorts=[];
+	for( var i=0,l=sortTypes.length; i<l; i++ ){
+		sorts.push(Cr.elm('option',{value: sortTypes[i].type, selected: curVal==sortTypes[i].type?'selected':''},[Cr.txt(sortTypes[i].name)]));
+	}
+	return sorts;
+}
+
 function begin(){
-	chrome.storage.local.get({leturlbarbreak:'false',fastmode:'false',bodystyle:'',matchfiles:'.JPG|.GIF|.PNG|.JPEG'},function(stor){
-		
+	chrome.storage.local.get({leturlbarbreak:'false',fastmode:'false',bodystyle:'',sorttype:'filename',matchfiles:'.JPG|.GIF|.PNG|.JPEG'},function(stor){
+
 		Cr.elm('div',{class:'label_rows'},[
 			Cr.elm('label',{},[
 				Cr.elm('input',{type:'checkbox',id:'fastmode',checked:(stor.fastmode=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
@@ -47,15 +62,22 @@ function begin(){
 //				Cr.txt(' Let url bar and back buttons break (faster yet, less flicker, broken URL bar)')
 //			]),
 			Cr.elm('label',{},[
-				Cr.txt('Body CSS '),
+				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Body CSS')]),
 				Cr.elm('input',{type:'text',id:'bodystyle',value:stor.bodystyle,valuebinding:'value'}),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' background-color:white;')])
 			]),
 			Cr.elm('label',{},[
-				Cr.txt('Match Files'),
-				Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')]),
+				Cr.elm('span',{class:'labeltxt'},[
+					Cr.txt('Match Files'),
+					Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
+				]),
 				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' .JPG|.GIF|.PNG|.JPEG')])
+			]),
+			Cr.elm('label',{},[
+				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
+				Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype)),
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' ')])
 			]),
 			Cr.elm('input',{type:'button',value:'Save',event:['click',saveSettings]})
 		],gel('options'));

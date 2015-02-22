@@ -6,6 +6,7 @@ var dirCurFile = -1;
 var timeoutId=0;
 var allowedExt = '.JPG|.GIF|.PNG|.JPEG';
 var fileUrlInitComplete = false;
+var directorySortType = 'filename';
 
 chrome.storage.local.get({matchfiles:false},function(obj){
 	if( obj.matchfiles && obj.matchfiles.length ){
@@ -74,14 +75,20 @@ function processFileRows(resp){
 				dirCurFile=newDirFiles.length;
 			}
 			var meta = rows[i].split(',');
-			var date = meta[4].split('"')[1];
-			var size = meta[3].split('"')[1];//convert to kb
-			newDirFiles.push({file_name:f,date:date});
+			var date = meta[4].split('"')[1].trim();
+			var time = meta[5].split('"')[0].trim();
+			var size = meta[3].split('"')[1].trim();//convert to B/Bytes ?
+			var timestamp = new Date(date + ' ' + time).getTime();
+
+			//console.log(f, size,  date, time, timestamp)
+			if( size != "0 B" ){ // we must skip 0byte images where content scripts do not run!
+				newDirFiles.push({file_name:f,date:timestamp});
+			}
 		}
 	}
 
 	dirFiles = newDirFiles;
-	//determineSort();
+	determineSort();
 
 	if(dirCurFile > -1){
 		createNextPrevArrows();
@@ -96,25 +103,29 @@ function processFileRows(resp){
 }
 
 function determineSort(){
-	dirFiles = dirFiles.sort(sortby_date_reverse);
+	dirFiles = dirFiles.sort(sorts[directorySortType]);
 	for(var i=0,l=dirFiles.length;i<l;i++){
 		if(dirFiles[i].file_name==startFileName){
 			dirCurFile=i;
 		}
 	}
 }
-function sortby_date(a,b){
-	return (new Date(a.date)).getTime() - (new Date(b.date)).getTime();
-}
-function sortby_date_reverse(a,b){
-	return -sortby_date(a,b);
-}
-function sortby_filename(a,b){
-	return a.file_name.localeCompare(b.file_name);
-}
-function sortby_filename_reverse(a,b){
-	return -sortby_filename(a,b);
-}
+
+
+var sorts = {
+	date_desc: function(a,b){
+		return b.date - a.date;
+	},
+	date_asc: function(a,b){
+		return -sorts.date_desc(a,b);
+	},
+	filename: function(a,b){
+		return a.file_name.localeCompare(b.file_name);
+	},
+	filename_reverse: function(a,b){
+		return -sorts.filename(a,b);
+	}
+};
 
 function dirLoaded(){
 	if (http.readyState == 4) {
@@ -430,6 +441,10 @@ function isViewingImage_LoadDirectory(){
 			document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
 		}
 
+		if( obj.sorttype && sorts[obj.sorttype] ){
+			directorySortType = obj.sorttype;
+		}
+
 		if(obj.fastmode && obj.fastmode=='true')fastmode=true;
 
 		//console.log('storage-loaded-parsed',new Date().getTime());
@@ -437,13 +452,9 @@ function isViewingImage_LoadDirectory(){
 			var dirCachedFiles=JSON.parse(obj.dir_cache);
 			if( dirCachedFiles.length > 0 ){
 				dirFiles=dirCachedFiles;
-				for(var i=0,l=dirFiles.length;i<l;i++){
-					if(dirFiles[i].file_name==startFileName){
-						//console.log('found current file in cache!');
-						dirCurFile=i;
-						createNextPrevArrows();
-						break;
-					}
+				determineSort()
+				if( dirCurFile > -1 ){
+					createNextPrevArrows();
 				}
 			}
 		}
