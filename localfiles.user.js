@@ -300,7 +300,7 @@ function createNextPrevArrows(){
 	window.addEventListener('keyup',wk);
 	window.addEventListener('popstate',navigationStatePop);
 	window.addEventListener('hashchange',navigationStateHashChange);
-	//preLoadFile(getNextName(dirCurFile));
+	//preLoadFile(getNextFile(dirCurFile));
 }
 function mmov(){
 	gel('arrowsleft').style.opacity="1",
@@ -593,15 +593,22 @@ function nav_next(ev){
 	else navToFile(dirFiles[dirCurFile].file_name);
 }
 
-function getNextName(cf){
+function getNextFile(cf){
 	var d=cf+1;
 	if(d > dirFiles.length-1)d=0;
 	if(!isValidFile(dirFiles[d].file_name))return getNextName(d);
-	else return 'Next: '+dirFiles[d].file_name;
+	else return dirFiles[d].file_name;
 }
-function getPrevName(cf){
+function getPrevFile(cf){
 	var d=cf-1;
 	if(d < 0)d=dirFiles.length-1;
 	if(!isValidFile(dirFiles[d].file_name))return getPrevName(d);
-	else return 'Previous: '+dirFiles[d].file_name;
+	else return dirFiles[d].file_name;
+}
+
+function getNextName(cf){
+	return 'Next: '+getNextFile(cf);
+}
+function getPrevName(cf){
+	return 'Previous: '+getPrevFile(cf);
 }
