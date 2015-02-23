@@ -325,7 +325,7 @@ function wk(ev){
 function osFormatPath(path){
 	if(navigator.platform.substr(0,3)=='Win')
 		return decodeURIComponent(path.substr(8).split('/').join('\\'));
-	else return decodeURIComponent(path.substr(8));
+	else return decodeURIComponent(path.substr(7));
 }
 function selectSelf(ev){
 	var elm=getEventTarget(ev);
