@@ -64,37 +64,36 @@ if(!document.body){
 function processFileRows(resp){
 	var newDirFiles=[];
 	var rows=resp.split('addRow("');
+	var f0,f,en,rDat,datetime, date, time, size, timestamp;
 	for(var i=1,l=rows.length;i<l;i++){
 
-		var st=rows[i].indexOf('","')+3;
-		var f=rows[i].substr(st,rows[i].indexOf('",',st)-st);
+		en=rows[i].indexOf('");');
+		rDat = JSON.parse('["'+rows[i].substr(0,en)+'"]')
+
+		f0 = rDat[0];
+		f = rDat[1]; //escaped name
 
 		if(f != '..'){
 			if(!isValidFile(f))continue;
-			if(f==startFileName){
+			if(f==startFileName || f0 == startFileName ){ // determineSort function seeks again
 				dirCurFile=newDirFiles.length;
 			}
-			var meta = rows[i].split(',');
-			var date = meta[4].split('"')[1].trim();
-			var time = meta[5].split('"')[0].trim();
-			var size = meta[3].split('"')[1].trim();//convert to B/Bytes ?
-			var timestamp = new Date(date + ' ' + time).getTime();
+			datetime = rDat[4].split(', ');
+			date = datetime[0];
+			time = datetime[1];
+			size = rDat[3];
+			timestamp = new Date(date + ' ' + time).getTime();
 
 			//console.log(f, size,  date, time, timestamp)
 			if( size != "0 B" ){ // we must skip 0byte images where content scripts do not run!
-				newDirFiles.push({file_name:f,date:timestamp});
+				newDirFiles.push({file_name:f0, date:timestamp});
 			}
 		}
 	}
-
 	dirFiles = newDirFiles;
 	determineSort();
+	attemptCreateNextPrevArrows();
 
-	if(dirCurFile > -1){
-		createNextPrevArrows();
-	}
-
-	
 	//console.log('httpreq-loaded-parsed',new Date().getTime(),startFileName,dirCurFile);
 	chrome.storage.local.set({'dir_url':directoryURL,'dir_cache':JSON.stringify(dirFiles)},function(){});
 //	console.log(dirFiles);
@@ -105,7 +104,7 @@ function processFileRows(resp){
 function determineSort(){
 	dirFiles = dirFiles.sort(sorts[directorySortType]);
 	for(var i=0,l=dirFiles.length;i<l;i++){
-		if(dirFiles[i].file_name==startFileName){
+		if(dirFiles[i].file_name==startFileName || dirFiles[i].file_name==decodeURIComponent(startFileName)){
 			dirCurFile=i;
 		}
 	}
@@ -213,10 +212,14 @@ function hideExtraControls(){
 }
 
 var arrowsCreated=false;
-function createNextPrevArrows(){
+function attemptCreateNextPrevArrows(){
 	if(arrowsCreated)return;
 	if(!bodyExists){
-		setTimeout(createNextPrevArrows,10);
+		setTimeout(attemptCreateNextPrevArrows,10);
+		return;
+	}
+	if( dirCurFile < 0 ){
+		console.log('Local Image Viewer ERROR: not found current filepath in valid files: '+startFileName);
 		return;
 	}
 	arrowsCreated=true;
@@ -452,10 +455,8 @@ function isViewingImage_LoadDirectory(){
 			var dirCachedFiles=JSON.parse(obj.dir_cache);
 			if( dirCachedFiles.length > 0 ){
 				dirFiles=dirCachedFiles;
-				determineSort()
-				if( dirCurFile > -1 ){
-					createNextPrevArrows();
-				}
+				determineSort();
+				attemptCreateNextPrevArrows();
 			}
 		}
 	});
