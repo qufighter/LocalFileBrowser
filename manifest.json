@@ -3,11 +3,15 @@
    "description": "Next and previous buttons for viewing images in local file URLs",
    "name": "Local Image Viewer",
    "content_scripts": [ {
-      "js": [ "Cr_min.js", "localfiles.user.js" ],
+      "js": [ "Cr_min.js", "common.js", "localfiles.user.js" ],
       "run_at": "document_start",
       "matches": [ "file:///*" ]
    }],
    "options_page": "about.html",
+   "background": {
+      "scripts": ["common.js", "background.js"],
+      "persistent": false
+   },
    "icons": {
        "16": "img/icon16.png",
        "32": "img/icon32.png",
@@ -26,5 +30,5 @@
    "permissions": [
       "tabs", "storage", "<all_urls>"
    ],
-   "version": "0.0.0.11"
+   "version": "0.0.0.12"
 }
