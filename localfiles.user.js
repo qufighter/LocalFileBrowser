@@ -1,12 +1,7 @@
-var bodyExists=false;
 var directoryURL=window.location.protocol + '//' + window.location.pathname;
-var startFileName='';
-var dirFiles = [];
-var dirCurFile = -1;
+var bodyExists=false;
 var timeoutId=0;
-var allowedExt = '.JPG|.GIF|.PNG|.JPEG';
 var fileUrlInitComplete = false;
-var directorySortType = 'filename';
 
 chrome.storage.local.get({matchfiles:false},function(obj){
 	if( obj.matchfiles && obj.matchfiles.length ){
@@ -18,6 +13,11 @@ chrome.storage.local.get({matchfiles:false},function(obj){
 });
 
 if(directoryURL.substr(directoryURL.length-1,1)!='/'){
+	chrome.storage.local.get({bodystyle:false},function(obj){
+		if(obj.bodystyle && obj.bodystyle.length > 0){
+			document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
+		}
+	});
 	initFileUrl();
 }else{
 	isViewingDirectory_LoadThumbnails();
@@ -60,78 +60,6 @@ if(!document.body){
 	bodyExists=true;
 	setApplyStyles()
 }
-
-function processFileRows(resp){
-	var newDirFiles=[];
-	var rows=resp.split('addRow("');
-	var f0,f,en,rDat,datetime, date, time, size, timestamp;
-	for(var i=1,l=rows.length;i<l;i++){
-
-		en=rows[i].indexOf('");');
-		rDat = JSON.parse('["'+rows[i].substr(0,en)+'"]')
-
-		f0 = rDat[0];
-		f = rDat[1]; //escaped name
-
-		if(f != '..'){
-			if(!isValidFile(f))continue;
-			if(f==startFileName || f0 == startFileName ){ // determineSort function seeks again
-				dirCurFile=newDirFiles.length;
-			}
-			datetime = rDat[4].split(', ');
-			date = datetime[0];
-			time = datetime[1];
-			size = rDat[3];
-			timestamp = new Date(date + ' ' + time).getTime();
-
-			//console.log(f, size,  date, time, timestamp)
-			if( size != "0 B" ){ // we must skip 0byte images where content scripts do not run!
-				newDirFiles.push({file_name:f0, date:timestamp});
-			}
-		}
-	}
-	dirFiles = newDirFiles;
-	determineSort();
-	attemptCreateNextPrevArrows();
-
-	//console.log('httpreq-loaded-parsed',new Date().getTime(),startFileName,dirCurFile);
-	chrome.storage.local.set({'dir_url':directoryURL,'dir_cache':JSON.stringify(dirFiles)},function(){});
-//	console.log(dirFiles);
-//	console.log(dirCurFile);
-//	console.log(startFileName);
-}
-
-function determineSort(){
-	dirFiles = dirFiles.sort(sorts[directorySortType]);
-	for(var i=0,l=dirFiles.length;i<l;i++){
-		if(dirFiles[i].file_name==startFileName || dirFiles[i].file_name==decodeURIComponent(startFileName)){
-			dirCurFile=i;
-		}
-	}
-}
-
-
-var sorts = {
-	date_desc: function(a,b){
-		return b.date - a.date;
-	},
-	date_asc: function(a,b){
-		return -sorts.date_desc(a,b);
-	},
-	filename: function(a,b){
-		return a.file_name.localeCompare(b.file_name);
-	},
-	filename_reverse: function(a,b){
-		return -sorts.filename(a,b);
-	}
-};
-
-function dirLoaded(){
-	if (http.readyState == 4) {
-		http.onreadystatechange=null;
-  	processFileRows(http.responseText);
-	}
-};
 
 var zoomedToFit=false,zoomdIsZoomedIn=false,imageIsNarrow=false,hasSizedOnce=false,localfile_zoombtn=false;
 function zoom_in(ev){
@@ -376,6 +304,8 @@ function isElementInView(elm){
 }
 
 var unloadedImages=[];
+var currentlyLoadingImgs=0;
+var maxLoadingImgs=5;
 
 function anImageLoaded(ev){
 	var im=getEventTarget(ev);
@@ -393,12 +323,15 @@ function anImageLoaded(ev){
 		var srcd=oh;
 	}
 	ctx.drawImage(im,0,0,srcd,srcd,0,0,75,75);
-
+	currentlyLoadingImgs--;
+	if(unloadedImages.length){
+		pageScrolled();
+	}
 //drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) //CANVAS
 }
 
 function loadDirFileIdToCvs(dirId){
-	Cr.elm('img',{loadevent:['load',anImageLoaded],id:dirId,src:directoryURL+dirFiles[dirId].file_name});
+	Cr.elm('img',{event:['load',anImageLoaded],id:dirId,src:directoryURL+dirFiles[dirId].file_name});
 }
 
 var pageScrTimeout=0;
@@ -411,7 +344,10 @@ function pageScrolledHandler(){
 	for(var i=0;i<unloadedImages.length;i++){
 		if(isElementInView(gel('cicn_'+unloadedImages[i]))){
 			loadDirFileIdToCvs(unloadedImages[i]);
-			unloadedImages.splice(i--,1)
+			unloadedImages.splice(i--,1);
+			if( ++currentlyLoadingImgs >= maxLoadingImgs ){
+				break; // exit loop and load the rest later, in batch
+			}
 		}
 	}
 }
@@ -419,56 +355,88 @@ function createThumbnailsBrowser(){
 	gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
 	window.addEventListener('scroll', pageScrolled);
 	window.addEventListener('resize', pageScrolled);
-	processFileRows(document.body.innerHTML);
 	for(var i=0,l=dirFiles.length;i<l;i++){
 		if(isValidFile(dirFiles[i].file_name)){
 			var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;',events:['click',navToFileByElmName]},[],document.body);
-			if(isElementInView(c)){
-				loadDirFileIdToCvs(i);
-			}else{
-				unloadedImages.push(i);
-			}
+			unloadedImages.push(i);
 		}
 	}
+	pageScrolled();
 }
 function prepareThumbnailsBrowser(){
+	loadPrefs(function(){
+		processFileRows(directoryURL, startFileName, document.body.innerHTML, function(){/* saved to chrome storage, if directory didn't change*/});
+	});
 	Cr.elm('button',{id:'loadThumbsBtn',events:['click',createThumbnailsBrowser]},[Cr.txt('Show Thumbnails...')],document.body)
 }
 
 var fastmode=false;
 function isViewingImage_LoadDirectory(){
-
+	//we could first just get dir_url and determine if cacheIsCurrent...
 	chrome.storage.local.get(null,function(obj){
-		//obj.bodystyle='background-color:grey;';
-		if(obj.bodystyle && obj.bodystyle.length > 0){
-			document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
-		}
+		var cacheIsCurrent=false;
 
+ 		// not really used on frontend anymore
 		if( obj.sorttype && sorts[obj.sorttype] ){
 			directorySortType = obj.sorttype;
 		}
 
 		if(obj.fastmode && obj.fastmode=='true')fastmode=true;
 
-		//console.log('storage-loaded-parsed',new Date().getTime());
-		if(obj.dir_url == directoryURL){
+		//console.log('comparing current dir:', obj.dir_url, directoryURL)
+		cacheIsCurrent = obj.dir_url == directoryURL;
+
+		if(cacheIsCurrent){
 			var dirCachedFiles=JSON.parse(obj.dir_cache);
 			if( dirCachedFiles.length > 0 ){
 				dirFiles=dirCachedFiles;
-				determineSort();
+				seekCurIndex();
 				attemptCreateNextPrevArrows();
+			}else{
+				cacheIsCurrent=false;
 			}
 		}
+		if( obj.fetching!=directoryURL || !cacheIsCurrent ) fetchNewDirectoryListing(cacheIsCurrent);
 	});
-	fetchNewDirectoryListingRequest();
 }
 
-function fetchNewDirectoryListingRequest(){
-	http = new XMLHttpRequest();
-	http.open("GET",directoryURL);
-	http.onreadystatechange=dirLoaded;
-	http.send(null);
+function fetchNewDirectoryListing(cacheIsCurrent){
+	if( cacheIsCurrent ){
+		//console.log('considering transmitting casual directory list request');
+		// this should only happen rarely, once per 30 seconds or greater, maybe several minutes
+		//chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName}, null);
+
+		// when settings are changed the cache is invalidated
+	}else{
+		//console.log('transmitting urgent directory list request');
+		chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName,respond:true}, null);
+		Cr.elm('div',{id:'loading-message',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[Cr.txt('LOADING DIRECTORY')],document.body);
+	}
 }
+
+function recievedDirectoryData(dataObj){
+	//console.log('loaded initial cache from background page...'); // from common.js
+	if( !dataObj || !dataObj.dir_cache ){
+		document.getElementById('loading-message').innerHTML="Sorry - error occured please try refreshing the page.";
+	}else{
+		// CAREFUL ! - we can get a response for a directory that is not the current directory
+		if( dataObj.dir_url == directoryURL ){
+			dirFiles = JSON.parse( dataObj.dir_cache );
+			dirCurFile = dataObj.dir_current - 0;
+			document.body.removeChild(document.getElementById('loading-message'));
+			attemptCreateNextPrevArrows();
+		}else{
+			//console.log('We got a directory cache back that is not current... ignoring...');
+		}
+	}
+}
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse){
+	if (request.dir_cache){
+		recievedDirectoryData(request)
+	}
+	sendResponse({});
+});
 
 function isViewingDirectory_LoadThumbnails(){
 	document.addEventListener('DOMContentLoaded', prepareThumbnailsBrowser);
@@ -543,7 +511,7 @@ function navToFile(file,suppressPushState){
 		}
 		newimg.addEventListener('click',zoom_in);
 		//now refrsh our copy of the directory listing....
-		fetchNewDirectoryListingRequest();
+		fetchNewDirectoryListing(true);
 		//don't do this every time! slows things down!
 	}
 	newimg.src=directoryURL+file;
@@ -567,11 +535,6 @@ function preLoadFile(file){
 	var im=new Image();
 	im.onload=function(){console.log('preloaded_next'+directoryURL+file)}
 	im.src=directoryURL+file;
-}
-
-function isValidFile(f){
-	var rx = new RegExp("("+allowedExt+")$",'gi');
-	return f.match(rx);
 }
 
 function nav_up(){

@@ -21,8 +21,11 @@ function saveSettings(){
 		fastmode:parseElementValue(gel('fastmode')),
 		matchfiles:parseElementValue(gel('matchfiles')),
 		sorttype:parseElementValue(gel('sorttype')),
-		bodystyle:parseElementValue(gel('bodystyle'))
-	},function(){});
+		bodystyle:parseElementValue(gel('bodystyle')),
+		fetching:'0'
+	},function(){
+		chrome.runtime.sendMessage({reloadPrefs:true}, function(response){});
+	});
 }
 
 function applyDependsTrue(ev){
@@ -37,7 +40,7 @@ function applyDependsTrue(ev){
 
 function getSortTypeOptions(curVal){
 	var sortTypes=[
-		{type: "filename", name: "Filename A-Z"},
+		{type: "filename", name: "Filename A-Z (fastest)"},
 		{type: "filename_reverse", name: "Filename Z-A"},
 		{type: "date_desc", name: "Date Modified From Newest"},
 		{type: "date_asc", name: "Date Modified From Oldest"},

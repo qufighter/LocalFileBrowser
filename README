@@ -1,1 +1,9 @@
 https://chrome.google.com/webstore/detail/local-image-viewer/lhlckkgdiojkapplglfeomlkjllphilo
+
+TESTS:
+
+Tests are largely manual right now and consist of two basic things:
+
+browsing directories with different types of filename formats and special charaters, at different sorts
+
+browsing directories with an extremely large number of images from slow drives - and avoiding lag while doing so
