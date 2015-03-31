@@ -461,7 +461,7 @@ function winLocGoCurrent(){
 
 function navToFile(file,suppressPushState){
 	if(!fastmode){
-		window.location=directoryURL+file;
+		window.location=directoryURL+encodeURIComponent(file);
 		return;
 	}
 	//this would be WAY better!  unfortunately:
@@ -506,7 +506,7 @@ function navToFile(file,suppressPushState){
 			}catch(e){
 				//console.log('SORRY cannot update window URL :/ - SecurityError: A history state object cannot be created in a document with origin \'null\'.');
 				//window.location=directoryURL+startFileName;
-				window.location.hash = startFileName;
+				window.location.hash = encodeURIComponent(startFileName);
 			}
 		}
 		newimg.addEventListener('click',zoom_in);
@@ -514,7 +514,7 @@ function navToFile(file,suppressPushState){
 		fetchNewDirectoryListing(true);
 		//don't do this every time! slows things down!
 	}
-	newimg.src=directoryURL+file;
+	newimg.src=directoryURL+encodeURIComponent(file);
 }
 
 function navigationStatePop(ev){//NOT implemented (cannot trigger, cannot replace state)
@@ -525,7 +525,7 @@ function navigationStatePop(ev){//NOT implemented (cannot trigger, cannot replac
 	}
 }
 function navigationStateHashChange(ev){
-	var fname = window.location.hash.replace('#','');
+	var fname = decodeURIComponent(window.location.hash.replace('#',''));
 	if( startFileName != fname){
 		navToFile(fname,true);
 	}
