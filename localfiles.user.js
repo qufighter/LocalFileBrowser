@@ -331,7 +331,7 @@ function anImageLoaded(ev){
 }
 
 function loadDirFileIdToCvs(dirId){
-	Cr.elm('img',{event:['load',anImageLoaded],id:dirId,src:directoryURL+dirFiles[dirId].file_name});
+	Cr.elm('img',{event:['load',anImageLoaded],id:dirId,src:directoryURL+encodeURIComponent(dirFiles[dirId].file_name)});
 }
 
 var pageScrTimeout=0;
@@ -534,7 +534,7 @@ function navigationStateHashChange(ev){
 function preLoadFile(file){
 	var im=new Image();
 	im.onload=function(){console.log('preloaded_next'+directoryURL+file)}
-	im.src=directoryURL+file;
+	im.src=directoryURL+encodeURIComponent(file);
 }
 
 function nav_up(){
