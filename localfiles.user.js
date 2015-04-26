@@ -180,6 +180,16 @@ function attemptCreateNextPrevArrows(){
   leftElm.push(extraControls[extraControls.length-1]);
 
   extraControls.push(
+    Cr.elm('img',{'title':'Fullscreen',
+                    'src':chrome.extension.getURL('img/zoom_in.png'),
+                    width:'77',events:[['click',fs_go]],
+                    style:'cursor:pointer;display:none;vertical-align: bottom;'
+                 }
+    )
+  );
+  leftElm.push(extraControls[extraControls.length-1]);
+
+  extraControls.push(
     Cr.elm('input',{'type':'text',
                     id:'os_path',
                     readonly:'readonly',
@@ -198,7 +208,7 @@ function attemptCreateNextPrevArrows(){
                     title:'Navigate URL bar to current path',
                     events:['click',winLocGoCurrent,true],
                     style:'position:relative;left:-100px;display:none;'
-                 }
+                   }
     )
   );
   leftElm.push(extraControls[extraControls.length-1]);
@@ -460,7 +470,7 @@ function winLocGoCurrent(){
 }
 
 function navToFile(file,suppressPushState){
-  if(!fastmode){
+  if(!fastmode && !isorwas_full_screen){
     window.location=directoryURL+encodeURIComponent(file);
     return;
   }
@@ -539,6 +549,32 @@ function preLoadFile(file){
 
 function nav_up(){
   window.location=directoryURL;
+}
+
+var isorwas_full_screen=false;
+function fs_go(){
+  if( !isFullScreen() ){
+    var el = document.documentElement, rfs =
+        el.requestFullScreen
+     || el.webkitRequestFullScreen
+     || el.mozRequestFullScreen;
+    rfs.call(el);
+    isorwas_full_screen=true;
+  }else{
+     var el = document, rfs =
+        el.exitFullscreen
+     || el.webkitExitFullscreen
+     || el.mozCancelFullScreen;
+    rfs.call(el);
+    isorwas_full_screen=false;
+  }
+}
+
+function isFullScreen()
+{
+    return (document.fullScreenElement && document.fullScreenElement !== null)
+         || document.mozFullScreen
+         || document.webkitIsFullScreen;
 }
 
 function nav_prev(ev){
