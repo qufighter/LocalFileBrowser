@@ -2,6 +2,7 @@ var directoryURL=window.location.protocol + '//' + window.location.pathname;
 var bodyExists=false;
 var timeoutId=0;
 var fileUrlInitComplete = false;
+var singleFileMode = false;
 
 chrome.storage.local.get({matchfiles:false},function(obj){
   if( obj.matchfiles && obj.matchfiles.length ){
@@ -24,6 +25,7 @@ if(directoryURL.substr(directoryURL.length-1,1)!='/'){
 }
 
 function initFileUrl(){
+  singleFileMode=true;
   if(isValidFile(directoryURL)){
     fileUrlInitComplete=true;
     var dirparts=directoryURL.split('/');
@@ -113,8 +115,13 @@ function imageViewResizedHandler(ev){
       }
       if(im.clientHeight){
         if(im.clientHeight < window.innerHeight){
-          im.style.marginTop=Math.round((window.innerHeight - im.clientHeight) * 0.5)+'px';
-        }else im.style.marginTop='0px';
+          var marginTop = Math.round((window.innerHeight - im.clientHeight) * 0.5);
+          im.style.marginTop=marginTop+'px';
+          im.style.marginBottom=(window.innerHeight-im.clientHeight-marginTop)+'px';
+        }else{
+          im.style.marginTop='0px';
+          im.style.marginBottom='0px';
+        }
       }
       if( zoomdIsZoomedIn )
         im.style.cursor=(zoomedToFit?'-webkit-zoom-out':'-webkit-zoom-in');
@@ -148,6 +155,7 @@ function attemptCreateNextPrevArrows(){
   }
   if( dirCurFile < 0 ){
     console.log('Local Image Viewer ERROR: not found current filepath in valid files: '+startFileName);
+    fetchNewDirectoryListing(false); // in this case, cache is NOT current
     return;
   }
   arrowsCreated=true;
@@ -189,6 +197,26 @@ function attemptCreateNextPrevArrows(){
   );
   leftElm.push(extraControls[extraControls.length-1]);
 
+  // extraControls.push(
+  //   Cr.elm('img',{'title':'Trigger Thumbnails',
+  //                   'src':chrome.extension.getURL('img/zoom_in.png'),
+  //                   width:'77',events:[['click',initSingleImageThumbnails]],
+  //                   style:'cursor:pointer;display:none;vertical-align: bottom;'
+  //                }
+  //   )
+  // );
+  // leftElm.push(extraControls[extraControls.length-1]);
+
+  // extraControls.push(
+  //   Cr.elm('img',{'title':'Options',
+  //                   'src':chrome.extension.getURL('img/zoom_in.png'),
+  //                   width:'77',events:[['click',visitOptions]],
+  //                   style:'cursor:pointer;display:none;vertical-align: bottom;'
+  //                }
+  //   )
+  // );
+  // leftElm.push(extraControls[extraControls.length-1]);
+
   extraControls.push(
     Cr.elm('input',{'type':'text',
                     id:'os_path',
@@ -224,16 +252,18 @@ function attemptCreateNextPrevArrows(){
 //    leftElm.push(localfile_zoombtn);
 //  }
 
-  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,document.body);
+  var arrowHolder = Cr.elm('div',{id:'arrowHolder',style:'position:relative;'},[],document.body);
+
+  Cr.elm('div',{id:'arrowsleft',style:'position:absolute;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,arrowHolder);
 
   if(showArrows){
     Cr.elm('img',{'title':getNextName(dirCurFile),
                       src:chrome.extension.getURL('img/arrow_right.png'),
                     width:'77',events:[['mouseup',nav_next],['dragstart',cancelEvent]],
-                    style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
+                    style:'position:absolute;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
                     class:'printhidden',
                     id:'arrowsright'
-                  },[],document.body);
+                  },[],arrowHolder);
     window.addEventListener('mousemove', mmov);
   }
 
@@ -242,6 +272,9 @@ function attemptCreateNextPrevArrows(){
   window.addEventListener('popstate',navigationStatePop);
   window.addEventListener('hashchange',navigationStateHashChange);
   //preLoadFile(getNextFile(dirCurFile));
+}
+function visitOptions(){
+  window.open(chrome.extension.getURL("about.html"));
 }
 function mmov(){
   gel('arrowsleft').style.opacity="1",
@@ -361,23 +394,56 @@ function pageScrolledHandler(){
     }
   }
 }
-function createThumbnailsBrowser(){
+function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
   window.addEventListener('scroll', pageScrolled);
   window.addEventListener('resize', pageScrolled);
-  for(var i=0,l=dirFiles.length;i<l;i++){
-    if(isValidFile(dirFiles[i].file_name)){
-      var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;',events:['click',navToFileByElmName]},[],document.body);
-      unloadedImages.push(i);
-    }
-  }
+  createThumbnailsBrowser(document.body,navToFileByElmName);
   pageScrolled();
 }
+function initSingleImageThumbnails(){
+  if( document.getElementById('thmhld') ){
+    document.body.removeChild(document.getElementById('thmhld'));
+    window.removeEventListener('scroll', pageScrolled);
+    window.removeEventListener('resize', pageScrolled);
+    unloadedImages=[];
+    return;
+  }
+  var thmhld=Cr.elm('div',{id:'thmhld',style:"margin-top:20px;"},[],document.body);
+  createThumbnailsBrowser(thmhld,navToFileByElmName);
+  window.addEventListener('scroll', pageScrolled);
+  window.addEventListener('resize', pageScrolled);
+  window.scrollBy(0,95);
+}
+function createThumbnailsBrowser(destination,clFn){
+  var start = dirCurFile - 5;
+  if( start < 0 ) start = 0;
+  for(var i=start,l=dirFiles.length;i<l;i++){
+      createSingleThumb(i,destination,clFn);
+  }
+  if( start > 0 ){
+    for(i=0,l=start;i<l;i++){
+      createSingleThumb(i,destination,clFn);
+    }
+  }
+}
+function createSingleThumb(fileIndex,destination,clFn){
+  var i = fileIndex;
+  if(isValidFile(dirFiles[i].file_name)){
+    var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;',events:['click',clFn]},[],destination);
+    unloadedImages.push(fileIndex);
+    if( i == dirCurFile ){
+      c.style.border='1px solid red';
+    }
+  }
+}
+
+
 function prepareThumbnailsBrowser(){
   loadPrefs(function(){
     processFileRows(directoryURL, startFileName, document.body.innerHTML, function(){/* saved to chrome storage, if directory didn't change*/});
   });
-  Cr.elm('button',{id:'loadThumbsBtn',events:['click',createThumbnailsBrowser]},[Cr.txt('Show Thumbnails...')],document.body)
+  Cr.elm('button',{id:'loadThumbsBtn',events:['click',initDirectoryThumbnails]},[Cr.txt('Show Thumbnails...')],document.body)
 }
 
 var fastmode=false;
@@ -410,6 +476,7 @@ function isViewingImage_LoadDirectory(){
   });
 }
 
+var awaitingDirectoryResponse=false;
 function fetchNewDirectoryListing(cacheIsCurrent){
   if( cacheIsCurrent ){
     //console.log('considering transmitting casual directory list request');
@@ -417,15 +484,17 @@ function fetchNewDirectoryListing(cacheIsCurrent){
     //chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName}, null);
 
     // when settings are changed the cache is invalidated
-  }else{
-    //console.log('transmitting urgent directory list request');
+    console.log('new directory listing requested but cacheIsCurrent, skipping...')
+  }else if(!awaitingDirectoryResponse){
+    console.log('transmitting urgent directory list request');
     chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName,respond:true}, null);
     Cr.elm('div',{id:'loading-message',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[Cr.txt('LOADING DIRECTORY')],document.body);
   }
 }
 
 function recievedDirectoryData(dataObj){
-  //console.log('loaded initial cache from background page...'); // from common.js
+  awaitingDirectoryResponse=false;
+  console.log('loaded initial cache from background page...'); // from common.js
   if( !dataObj || !dataObj.dir_cache ){
     document.getElementById('loading-message').innerHTML="Sorry - error occured please try refreshing the page.";
   }else{
@@ -436,7 +505,7 @@ function recievedDirectoryData(dataObj){
       document.body.removeChild(document.getElementById('loading-message'));
       attemptCreateNextPrevArrows();
     }else{
-      //console.log('We got a directory cache back that is not current... ignoring...');
+      console.log('We got a directory cache back that is not current... ignoring...' + dataObj.dir_url +' != '+ directoryURL);
     }
   }
 }
@@ -462,7 +531,12 @@ function injectStyleSheet(){
 
 function navToFileByElmName(ev){
   var im=getEventTarget(ev);
-  window.location=directoryURL+im.getAttribute('name');
+  if( singleFileMode ){
+    document.getElementById('cicn_'+dirCurFile).style.border='';
+    dirCurFile = im.id.replace('cicn_','')-0;
+    navToFile(im.getAttribute('name'), false);
+    document.getElementById('cicn_'+dirCurFile).style.border='1px solid red';
+  }else window.location=directoryURL+im.getAttribute('name');
 }
 
 function winLocGoCurrent(){

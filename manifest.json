@@ -25,10 +25,11 @@
      "img/arrow_right.png",
      "img/arrow_up.png",
      "img/zoom_in.png",
-     "img/zoom_out.png"
+     "img/zoom_out.png",
+     "about.html"
    ],
    "permissions": [
       "tabs", "storage", "<all_urls>"
    ],
-   "version": "0.0.0.14"
+   "version": "0.0.0.15"
 }
