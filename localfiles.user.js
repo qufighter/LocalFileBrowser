@@ -348,7 +348,7 @@ function isElementInView(elm){
 
 var unloadedImages=[];
 var currentlyLoadingImgs=0;
-var maxLoadingImgs=5;
+var maxLoadingImgs=4;
 
 function anImageLoaded(ev){
   var im=getEventTarget(ev);
@@ -429,15 +429,20 @@ function createThumbnailsBrowser(destination,clFn){
     }
   }
 }
+var SELECTED_THUMBNAIL_BORDER='1px solid red';
+var curThumb = 0;
 function createSingleThumb(fileIndex,destination,clFn){
   var i = fileIndex;
   if(isValidFile(dirFiles[i].file_name)){
     var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;',events:['click',clFn]},[],destination);
     unloadedImages.push(fileIndex);
-    if( i == dirCurFile ){
-      c.style.border='1px solid red';
-    }
   }
+  updateThumbnail();
+}
+function updateThumbnail(){
+  if( curThumb ) curThumb.style.border='';
+  curThumb=document.getElementById('cicn_'+dirCurFile);
+  if( curThumb ) curThumb.style.border=SELECTED_THUMBNAIL_BORDER;
 }
 
 
@@ -534,10 +539,8 @@ function injectStyleSheet(){
 function navToFileByElmName(ev){
   var im=getEventTarget(ev);
   if( singleFileMode ){
-    document.getElementById('cicn_'+dirCurFile).style.border='';
     dirCurFile = im.id.replace('cicn_','')-0;
     navToFile(im.getAttribute('name'), false);
-    document.getElementById('cicn_'+dirCurFile).style.border='1px solid red';
   }else window.location=directoryURL+im.getAttribute('name');
 }
 
@@ -562,6 +565,7 @@ function navToFile(file,suppressPushState){
   var newimg = origImg.cloneNode();
   newimg.removeAttribute('width');
   newimg.removeAttribute('height');
+  updateThumbnail();
   newimg.onload=function(ev){
     if(!origImg)return;
     document.body.removeChild(origImg);//breaks here sometimes, but its good execution stops here too, this is when going fast and an image takes too long to load but they click next, the next image loads faster, eventually the orig image loads, it tries to remove the previous image but that one no longer exists (since the smaller image already removed it)
