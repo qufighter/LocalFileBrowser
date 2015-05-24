@@ -26,10 +26,13 @@
      "img/arrow_up.png",
      "img/zoom_in.png",
      "img/zoom_out.png",
+     "img/fillscreen.png",
+     "img/gear.png",
+     "img/thumbs.png",
      "about.html"
    ],
    "permissions": [
       "tabs", "storage", "<all_urls>"
    ],
-   "version": "0.0.0.15"
+   "version": "0.0.0.16"
 }

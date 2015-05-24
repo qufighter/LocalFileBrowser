@@ -189,7 +189,7 @@ function attemptCreateNextPrevArrows(){
 
   extraControls.push(
     Cr.elm('img',{'title':'Fullscreen',
-                    'src':chrome.extension.getURL('img/zoom_in.png'),
+                    'src':chrome.extension.getURL('img/fillscreen.png'),
                     width:'77',events:[['click',fs_go]],
                     style:'cursor:pointer;display:none;vertical-align: bottom;'
                  }
@@ -197,25 +197,25 @@ function attemptCreateNextPrevArrows(){
   );
   leftElm.push(extraControls[extraControls.length-1]);
 
-  // extraControls.push(
-  //   Cr.elm('img',{'title':'Trigger Thumbnails',
-  //                   'src':chrome.extension.getURL('img/zoom_in.png'),
-  //                   width:'77',events:[['click',initSingleImageThumbnails]],
-  //                   style:'cursor:pointer;display:none;vertical-align: bottom;'
-  //                }
-  //   )
-  // );
-  // leftElm.push(extraControls[extraControls.length-1]);
+  extraControls.push(
+    Cr.elm('img',{'title':'Toggle Thumbnails',
+                    'src':chrome.extension.getURL('img/thumbs.png'),
+                    width:'77',events:[['click',initSingleImageThumbnails]],
+                    style:'cursor:pointer;display:none;vertical-align: bottom;'
+                 }
+    )
+  );
+  leftElm.push(extraControls[extraControls.length-1]);
 
-  // extraControls.push(
-  //   Cr.elm('img',{'title':'Options',
-  //                   'src':chrome.extension.getURL('img/zoom_in.png'),
-  //                   width:'77',events:[['click',visitOptions]],
-  //                   style:'cursor:pointer;display:none;vertical-align: bottom;'
-  //                }
-  //   )
-  // );
-  // leftElm.push(extraControls[extraControls.length-1]);
+  extraControls.push(
+    Cr.elm('img',{'title':'Options',
+                    'src':chrome.extension.getURL('img/gear.png'),
+                    width:'77',events:[['click',visitOptions]],
+                    style:'cursor:pointer;display:none;vertical-align: bottom;'
+                 }
+    )
+  );
+  leftElm.push(extraControls[extraControls.length-1]);
 
   extraControls.push(
     Cr.elm('input',{'type':'text',
@@ -252,15 +252,15 @@ function attemptCreateNextPrevArrows(){
 //    leftElm.push(localfile_zoombtn);
 //  }
 
-  var arrowHolder = Cr.elm('div',{id:'arrowHolder',style:'position:relative;'},[],document.body);
+  var arrowHolder = document.body; //Cr.elm('div',{id:'arrowHolder',style:'position:relative;'},[],document.body);
 
-  Cr.elm('div',{id:'arrowsleft',style:'position:absolute;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,arrowHolder);
+  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,arrowHolder);
 
   if(showArrows){
     Cr.elm('img',{'title':getNextName(dirCurFile),
                       src:chrome.extension.getURL('img/arrow_right.png'),
                     width:'77',events:[['mouseup',nav_next],['dragstart',cancelEvent]],
-                    style:'position:absolute;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
+                    style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
                     class:'printhidden',
                     id:'arrowsright'
                   },[],arrowHolder);
@@ -380,7 +380,7 @@ function loadDirFileIdToCvs(dirId){
 var pageScrTimeout=0;
 function pageScrolled(){
   clearTimeout(pageScrTimeout);
-  pageScrTimeout=setTimeout(pageScrolledHandler,1000);
+  pageScrTimeout=setTimeout(pageScrolledHandler,500);
 }
 
 function pageScrolledHandler(){
@@ -402,17 +402,19 @@ function initDirectoryThumbnails(){
   pageScrolled();
 }
 function initSingleImageThumbnails(){
-  if( document.getElementById('thmhld') ){
-    document.body.removeChild(document.getElementById('thmhld'));
-    window.removeEventListener('scroll', pageScrolled);
-    window.removeEventListener('resize', pageScrolled);
-    unloadedImages=[];
-    return;
+  var thmhld=document.getElementById('thmhld');
+  if( thmhld ){
+    if( thmhld.style.display=='none' ){
+      thmhld.style.display='block';
+    }else{
+      thmhld.style.display='none';
+    }
+  }else{
+    thmhld=Cr.elm('div',{id:'thmhld',style:"margin:20px 18% 75px 18%;"},[],document.body);
+    createThumbnailsBrowser(thmhld,navToFileByElmName);
+    window.addEventListener('scroll', pageScrolled);
+    window.addEventListener('resize', pageScrolled);
   }
-  var thmhld=Cr.elm('div',{id:'thmhld',style:"margin-top:20px;"},[],document.body);
-  createThumbnailsBrowser(thmhld,navToFileByElmName);
-  window.addEventListener('scroll', pageScrolled);
-  window.addEventListener('resize', pageScrolled);
   window.scrollBy(0,95);
 }
 function createThumbnailsBrowser(destination,clFn){
@@ -484,7 +486,7 @@ function fetchNewDirectoryListing(cacheIsCurrent){
     //chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName}, null);
 
     // when settings are changed the cache is invalidated
-    console.log('new directory listing requested but cacheIsCurrent, skipping...')
+    //console.log('new directory listing requested but cacheIsCurrent, skipping...')
   }else if(!awaitingDirectoryResponse){
     console.log('transmitting urgent directory list request');
     chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName,respond:true}, null);
