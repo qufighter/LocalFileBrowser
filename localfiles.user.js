@@ -172,7 +172,7 @@ function attemptCreateNextPrevArrows(){
                         id :'previous_file',
                       'src':chrome.extension.getURL('img/arrow_left.png'),
                       width:'77',events:[['mouseup',nav_prev],['dragstart',cancelEvent]],
-                      style:'cursor:pointer;vertical-align: bottom;'
+                      style:'float:left;cursor:pointer;vertical-align: bottom;'
                    }
       )
     );
