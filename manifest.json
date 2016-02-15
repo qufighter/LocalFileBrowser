@@ -3,7 +3,7 @@
    "description": "Next and previous buttons for viewing images in local file URLs",
    "name": "Local Image Viewer",
    "content_scripts": [ {
-      "js": [ "Cr_min.js", "common.js", "localfiles.user.js" ],
+      "js": [ "Cr.js", "common.js", "localfiles.user.js" ],
       "run_at": "document_start",
       "matches": [ "file:///*" ]
    }],
@@ -26,6 +26,9 @@
      "img/arrow_up.png",
      "img/zoom_in.png",
      "img/zoom_out.png",
+     "img/play.png",
+     "img/pause.png",
+     "img/ffwd.png",
      "img/fillscreen.png",
      "img/gear.png",
      "img/thumbs.png",

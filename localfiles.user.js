@@ -133,29 +133,46 @@ function imageViewResizedHandler(ev){
   }
 }
 
-var extraControls=[];
-function showExtraControls(){
-  for(var i in extraControls){
-    extraControls[i].style.display="inline";
+var extraControlsLeft=[],extraControlsRight=[];
+function showExtraControlsLeft(){
+  hideExtraControlsRight();
+  for(var i in extraControlsLeft){
+    extraControlsLeft[i].style.display="inline";
   }
 }
 
-function hideExtraControls(){
-  for(var i in extraControls){
-    extraControls[i].style.display="none";
+function hideExtraControlsLeft(){
+  for(var i in extraControlsLeft){
+    extraControlsLeft[i].style.display="none";
+  }
+}
+
+function showExtraControlsRight(){
+  hideExtraControlsLeft();
+  for(var i in extraControlsRight){
+    extraControlsRight[i].style.display="inline";
+  }
+}
+
+function hideExtraControlsRight(){
+  for(var i in extraControlsRight){
+    extraControlsRight[i].style.display="none";
   }
 }
 
 var arrowsCreated=false;
+var attemptsBeforeCreateArrowAnyway = 0; // with full/default directory filters? matching current file ext?  Match * ?
 function attemptCreateNextPrevArrows(){
   if(arrowsCreated)return;
   if(!bodyExists){
     setTimeout(attemptCreateNextPrevArrows,10);
     return;
   }
-  if( dirCurFile < 0 ){
-    console.log('Local Image Viewer ERROR: not found current filepath in valid files: '+startFileName);
-    fetchNewDirectoryListing(false); // in this case, cache is NOT current
+  if( dirCurFile < 0 && attemptsBeforeCreateArrowAnyway < 10 ){
+    console.log('Local Image Viewer ERROR: not found current filepath in valid files: '+startFileName+' - Please update Match Files from preferences to include this file.');
+    attemptsBeforeCreateArrowAnyway++;
+    if( !wasCanceled )
+      fetchNewDirectoryListing(false); // in this case, cache is NOT current , retry attempts
     return;
   }
   arrowsCreated=true;
@@ -165,7 +182,7 @@ function attemptCreateNextPrevArrows(){
   imageViewResizedHandler();
 
   var showArrows = dirFiles.length > 1;
-  var leftElm=[];
+  var leftElm=[],rightElm=[],tempElm;
   if(showArrows){
     leftElm.push(
       Cr.elm('img',{'title':getPrevName(dirCurFile),
@@ -177,7 +194,7 @@ function attemptCreateNextPrevArrows(){
       )
     );
   }
-  extraControls.push(
+  extraControlsLeft.push(
     Cr.elm('img',{'title':'View Parent Directory',
                     'src':chrome.extension.getURL('img/arrow_up.png'),
                     width:'77',events:[['click',nav_up]],
@@ -185,9 +202,9 @@ function attemptCreateNextPrevArrows(){
                  }
     )
   );
-  leftElm.push(extraControls[extraControls.length-1]);
+  leftElm.push(extraControlsLeft[extraControlsLeft.length-1]);
 
-  extraControls.push(
+  extraControlsLeft.push(
     Cr.elm('img',{'title':'Fullscreen',
                     'src':chrome.extension.getURL('img/fillscreen.png'),
                     width:'77',events:[['click',fs_go]],
@@ -195,9 +212,9 @@ function attemptCreateNextPrevArrows(){
                  }
     )
   );
-  leftElm.push(extraControls[extraControls.length-1]);
+  leftElm.push(extraControlsLeft[extraControlsLeft.length-1]);
 
-  extraControls.push(
+  extraControlsLeft.push(
     Cr.elm('img',{'title':'Toggle Thumbnails',
                     'src':chrome.extension.getURL('img/thumbs.png'),
                     width:'77',events:[['click',initSingleImageThumbnails]],
@@ -205,9 +222,9 @@ function attemptCreateNextPrevArrows(){
                  }
     )
   );
-  leftElm.push(extraControls[extraControls.length-1]);
+  leftElm.push(extraControlsLeft[extraControlsLeft.length-1]);
 
-  extraControls.push(
+  extraControlsLeft.push(
     Cr.elm('img',{'title':'Options',
                     'src':chrome.extension.getURL('img/gear.png'),
                     width:'77',events:[['click',visitOptions]],
@@ -215,9 +232,9 @@ function attemptCreateNextPrevArrows(){
                  }
     )
   );
-  leftElm.push(extraControls[extraControls.length-1]);
+  leftElm.push(extraControlsLeft[extraControlsLeft.length-1]);
 
-  extraControls.push(
+  extraControlsLeft.push(
     Cr.elm('input',{'type':'text',
                     id:'os_path',
                     readonly:'readonly',
@@ -228,9 +245,9 @@ function attemptCreateNextPrevArrows(){
                  }
     )
   );
-  leftElm.push(extraControls[extraControls.length-1]);
+  leftElm.push(extraControlsLeft[extraControlsLeft.length-1]);
 
-  extraControls.push(
+  extraControlsLeft.push(
     Cr.elm('input',{'type':'button',
                     value:'Go',
                     title:'Navigate URL bar to current path',
@@ -239,7 +256,7 @@ function attemptCreateNextPrevArrows(){
                    }
     )
   );
-  leftElm.push(extraControls[extraControls.length-1]);
+  leftElm.push(extraControlsLeft[extraControlsLeft.length-1]);
 
 //  if(!zoomedToFit){
 //    localfile_zoombtn = Cr.elm('img',{'title':'Zoom',
@@ -248,31 +265,81 @@ function attemptCreateNextPrevArrows(){
 //                      style:'cursor:pointer;display:none;'
 //                   }
 //    );
-//    extraControls.push(localfile_zoombtn);
+//    extraControlsLeft.push(localfile_zoombtn);
 //    leftElm.push(localfile_zoombtn);
 //  }
 
   var arrowHolder = document.body; //Cr.elm('div',{id:'arrowHolder',style:'position:relative;'},[],document.body);
 
-  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControls],['mouseout',hideExtraControls]]},leftElm,arrowHolder);
+  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsLeft],['mouseout',hideExtraControlsLeft]]},leftElm,arrowHolder);
+
 
   if(showArrows){
-    Cr.elm('img',{'title':getNextName(dirCurFile),
-                      src:chrome.extension.getURL('img/arrow_right.png'),
-                    width:'77',events:[['mouseup',nav_next],['dragstart',cancelEvent]],
-                    style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;cursor:pointer;',
-                    class:'printhidden',
-                    id:'arrowsright'
-                  },[],arrowHolder);
+    tempElm = Cr.elm('img',{
+      title: getNextName(dirCurFile),
+      src:chrome.extension.getURL('img/arrow_right.png'),
+      width:'77',events:[['mouseup',nav_next],['dragstart',cancelEvent]],
+      style:'float:right;cursor:pointer;vertical-align: bottom;',
+      class:'printhidden',
+      id:'next_file'
+    });
+    rightElm.push(tempElm);
     window.addEventListener('mousemove', mmov);
   }
+
+  Cr.elm('div',{id:'arrowsright',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsRight],['mouseout',hideExtraControlsRight]]},rightElm,arrowHolder);
 
   window.addEventListener('resize', imageViewResized);
   window.addEventListener('keyup',wk);
   window.addEventListener('popstate',navigationStatePop);
   window.addEventListener('hashchange',navigationStateHashChange);
   //preLoadFile(getNextFile(dirCurFile));
+
+  if( showArrows ) setTimeout(createExtraControls, 5);
 }
+
+function createExtraControls(){
+  var rightFrag = Cr.frag();
+  var rightDest = gel('arrowsright'), tempElm;
+  tempElm = Cr.elm('select',{
+    title:"Autoplay FPS",
+    value:24,
+    id:'fps',
+    width:23,
+    style:"display:none;vertical-align: bottom;",
+    class:'printhidden'
+  },[
+    Cr.elm('option',{value:0.10},[Cr.txt("each frame 10 seconds")]),
+    Cr.elm('option',{value:0.20},[Cr.txt("1 frame 5 seconds")]),
+    Cr.elm('option',{value:0.25},[Cr.txt("1 frame 4 seconds")]),
+    Cr.elm('option',{value:0.33},[Cr.txt("1 frame 3 seconds")]),
+    Cr.elm('option',{value:0.5,selected:1},[Cr.txt("1 frame 2 seconds")]),
+    Cr.elm('option',{value:1},[Cr.txt("1 Frame-Per-Second")]),
+    Cr.elm('option',{value:2},[Cr.txt("2 FPS")]),
+    Cr.elm('option',{value:3},[Cr.txt("3 FPS")]),
+    Cr.elm('option',{value:5},[Cr.txt("5 FPS")]),
+    Cr.elm('option',{value:10},[Cr.txt("10 FPS")]),
+    Cr.elm('option',{value:12},[Cr.txt("12 FPS")]),
+    Cr.elm('option',{value:15},[Cr.txt("15 FPS")]),
+    Cr.elm('option',{value:24},[Cr.txt("24 FPS")]),
+    Cr.elm('option',{value:30},[Cr.txt("30 FPS")]),
+    Cr.elm('option',{value:60},[Cr.txt("60 FPS")]),
+  ],rightFrag);
+  //tempElm.childNodes[3].selected=true;
+  extraControlsRight.push(tempElm);
+
+  tempElm = Cr.elm('img',{
+    title:"Autoplay",
+    src:chrome.extension.getURL('img/play.png'),
+    width:'28',events:[['mouseup',auto_play],['dragstart',cancelEvent]],
+    style:'cursor:pointer;display:none;vertical-align: bottom;',
+    class:'printhidden',
+    id:'ffwd'
+  },[],rightFrag);
+  extraControlsRight.push(tempElm);
+  rightDest.appendChild(rightFrag);
+}
+
 function visitOptions(){
   window.open(chrome.extension.getURL("about.html"));
 }
@@ -293,6 +360,7 @@ function wk(ev){
   }else if(ev.keyCode==39){//right
     if(zoomdIsZoomedIn || imageIsNarrow || zoomedToFit) nav_next();
   }else if(ev.keyCode==32){//space
+    stop_auto_play();
     zoom_in();
   }
 }
@@ -483,6 +551,17 @@ function isViewingImage_LoadDirectory(){
   });
 }
 
+var wasCanceled = false;
+function cancelLoad(){
+  doneLoading();
+  wasCanceled = true;
+}
+
+function doneLoading(){
+  var m = document.getElementById('loading-message');
+  if( m ) document.body.removeChild(m);
+}
+
 var awaitingDirectoryResponse=false;
 function fetchNewDirectoryListing(cacheIsCurrent){
   if( cacheIsCurrent ){
@@ -493,9 +572,9 @@ function fetchNewDirectoryListing(cacheIsCurrent){
     // when settings are changed the cache is invalidated
     //console.log('new directory listing requested but cacheIsCurrent, skipping...')
   }else if(!awaitingDirectoryResponse){
-    console.log('transmitting urgent directory list request');
+    console.log('transmitting directory list request for Match Files configuration');
     chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName,respond:true}, null);
-    Cr.elm('div',{id:'loading-message',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[Cr.txt('LOADING DIRECTORY')],document.body);
+    Cr.elm('div',{id:'loading-message',title:'Local Image Viewer Chrome Extension. Filter May Not Match File. Configure from options.',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[Cr.txt('LOADING DIRECTORY '),Cr.elm('span',{event:['click',cancelLoad]},[Cr.txt('Cancel')])],document.body);
   }
 }
 
@@ -509,7 +588,7 @@ function recievedDirectoryData(dataObj){
     if( dataObj.dir_url == directoryURL ){
       dirFiles = JSON.parse( dataObj.dir_cache );
       dirCurFile = dataObj.dir_current - 0;
-      document.body.removeChild(document.getElementById('loading-message'));
+      doneLoading();
       attemptCreateNextPrevArrows();
     }else{
       console.log('We got a directory cache back that is not current... ignoring...' + dataObj.dir_url +' != '+ directoryURL);
@@ -566,9 +645,28 @@ function navToFile(file,suppressPushState){
   newimg.removeAttribute('width');
   newimg.removeAttribute('height');
   updateThumbnail();
+  newimg.onerror=function(ev){
+    // console.log("Loading Error", ev);
+    //fetchNewDirectoryListing(false); // possible that the file was deleted or directory does not match, but since it also might just be an alias, it won't disapear on refresh
+    // certain image just will not load, not that the file doesn't exist (it was an alias to an image, not an actual image)
+
+    // if( file == dirFiles[dirCurFile].file_name ){
+    //   console.log('removing');
+    //   dirFiles.splice(dirCurFile, 1);
+    //   navToFile(dirFiles[dirCurFile].file_name); // if going fwd, this will be the right file
+    // }
+    var cvs = Cr.elm('canvas',{width:400,height:400});
+    var ctx = cvs.getContext('2d');
+    ctx.font = "24px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Error Loading", 200, 175);
+    ctx.fillText('"'+file+'"', 200, 225);
+    newimg.src = cvs.toDataURL();
+  };
   newimg.onload=function(ev){
-    if(!origImg)return;
-    document.body.removeChild(origImg);//breaks here sometimes, but its good execution stops here too, this is when going fast and an image takes too long to load but they click next, the next image loads faster, eventually the orig image loads, it tries to remove the previous image but that one no longer exists (since the smaller image already removed it)
+    if(!origImg || !origImg.parentNode )return;
+    origImg.parentNode.removeChild(origImg);//breaks here sometimes, but its good execution stops here too, this is when going fast and an image takes too long to load but they click next, the next image loads faster, eventually the orig image loads, it tries to remove the previous image but that one no longer exists (since the smaller image already removed it)
+    origImg = null;
     startFileName=loadedFileName;
 
     var im=getEventTarget(ev);
@@ -584,7 +682,7 @@ function navToFile(file,suppressPushState){
     imageViewResizedHandler();
 
     gel('os_path').value=osFormatPath(directoryURL+startFileName);
-    gel('arrowsright').title = getNextName(dirCurFile);
+    gel('next_file').title = getNextName(dirCurFile);
     gel('previous_file').title = getPrevName(dirCurFile);
 
     if(!suppressPushState){
@@ -655,6 +753,35 @@ function isFullScreen()
     return (document.fullScreenElement && document.fullScreenElement !== null)
          || document.mozFullScreen
          || document.webkitIsFullScreen;
+}
+
+var autoplayInterval = 0;
+function auto_play(ev){
+  if(ev && ev.which && ev.which == 3)return;
+  if( autoplayInterval ){
+    stop_auto_play();
+  }else{
+    var fps = gel('fps');
+    var ffwd = gel("ffwd");
+    var timeout = Math.round(1000 / (fps.value - 0));
+    fps.style.display="none";
+    ffwd.src=chrome.extension.getURL("img/pause.png");
+    autoplayInterval = setInterval(function(){nav_next()},timeout);
+    setTimeout(function(){
+      window.addEventListener('click', stop_auto_play);
+    },5);
+  }
+}
+function stop_auto_play(){
+  if( autoplayInterval ){
+    window.removeEventListener('click', stop_auto_play);
+    var fps = gel('fps');
+    var ffwd = gel("ffwd");
+    clearInterval(autoplayInterval);
+    autoplayInterval = 0;
+    fps.style.display="inline";
+    ffwd.src=chrome.extension.getURL("img/play.png");
+  }
 }
 
 function nav_prev(ev){
