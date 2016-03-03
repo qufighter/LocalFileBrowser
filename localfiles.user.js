@@ -64,13 +64,31 @@ if(!document.body){
 }
 
 var zoomedToFit=false,zoomdIsZoomedIn=false,imageIsNarrow=false,hasSizedOnce=false,localfile_zoombtn=false;
+var enlargeSmallImagesToViewportSize = false;
 function zoom_in(ev){
+  if( !zoomedToFit && !imageIsShrunken() ){
+    enlargeSmallImagesToViewportSize = true;
+  }else{
+    enlargeSmallImagesToViewportSize = false;
+  }
   zoomedToFit = !zoomedToFit;
   imageViewResizedHandler(ev);
 }
-function handleImageJustLoaded(){
-  determineIfZoomedToFit();
+function handleImageJustLoaded(ev, zoomedToFitJustSet){
+  if( !zoomedToFitJustSet ) determineIfZoomedToFit();
+
+  if( enlargeSmallImagesToViewportSize && !zoomedToFit && !imageIsShrunken() ){
+    zoomedToFit = !zoomedToFit;
+  }
+
   imageViewResizedHandler();
+}
+function imageIsShrunken(){
+  var im=document.body.getElementsByTagName('img')[0];
+  if(im){
+    return im.naturalWidth > im.clientWidth;
+  }
+  return false;
 }
 function determineIfZoomedToFit(){
   var im=document.body.getElementsByTagName('img')[0];
@@ -679,7 +697,7 @@ function navToFile(file,suppressPushState){
     //perhaps an option to preserve zoomed state??
 
     document.body.insertBefore(newimg,origNextSibl);
-    imageViewResizedHandler();
+    handleImageJustLoaded({}, true);
 
     gel('os_path').value=osFormatPath(directoryURL+startFileName);
     gel('next_file').title = getNextName(dirCurFile);
