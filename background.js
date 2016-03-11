@@ -1,7 +1,12 @@
-var reqInProg = 0, http;
+var reqInProg = 0, http, lsnaptabid = 0;
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if(request.respond || request.fetch && !reqInProg){
+  if( request.captureImageModification ){ // sounds ominous, used for save where canvas is "tained" by local file system after rotate, so we resort to chrome captureVisibleTab API to gain the rotated image piece by piece
+    lsnaptabid=sender.tab.id;
+    chrome.tabs.captureVisibleTab(null, {format:'png'}, function(a){
+      chrome.tabs.sendMessage(lsnaptabid, {imageCaptured:true,imageDataUrl:a}, function(response) {});
+    });
+  }else if(request.respond || request.fetch && !reqInProg){
     var sentStartFileName = request.startFile;
     var sentDirectoryURL = request.fetch;
     chrome.storage.local.get({'fetching':'0'}, function(obja){

@@ -355,7 +355,274 @@ function createExtraControls(){
     id:'ffwd'
   },[],rightFrag);
   extraControlsRight.push(tempElm);
+
+  tempElm = Cr.elm('img',{
+    title:"Left Right",
+    src:chrome.extension.getURL('img/r_left.png'),
+    width:'28',events:[['mouseup',rotate_left],['dragstart',cancelEvent]],
+    style:'cursor:pointer;display:none;vertical-align: bottom;',
+    class:'printhidden',
+    id:'edit_mode'
+  },[],rightFrag);
+  extraControlsRight.push(tempElm);
+
+  tempElm = Cr.elm('img',{
+    title:"Rotate Right",
+    src:chrome.extension.getURL('img/r_right.png'),
+    width:'28',events:[['mouseup',rotate_right],['dragstart',cancelEvent]],
+    style:'cursor:pointer;display:none;vertical-align: bottom;',
+    class:'printhidden',
+    id:'edit_mode'
+  },[],rightFrag);
+  extraControlsRight.push(tempElm);
+
+  tempElm = Cr.elm('a',{style:'display:none;cursor:pointer;vertical-align: bottom;',class:'printhidden',id:'save'},[
+    Cr.elm('img',{
+      title:"Save Changes",
+      width:'50',
+      src:chrome.extension.getURL('img/save.png'),
+    })
+  ],rightFrag);
+
   rightDest.appendChild(rightFrag);
+}
+
+function rotate_right(){
+  editMode.rotateRight();
+}
+function rotate_left(){
+  editMode.rotateLeft();
+}
+
+var editMode = { // not really edit mode yet
+  snapDest: {x:0,y:0},
+  snapSize: {w:0,h:0},
+  imgSize: {w:0,h:0},
+  attempts: 0,
+  origImg: null,
+  tempCvs: null,
+  capCvs: null,
+  editCvs: null,
+  snapCvs: null,
+  snapCtx: null,
+  created: false,
+  lastBgColor: {r:0,g:0,b:0},
+  imgToTake: [],
+  imgToTakeIdx: 0,
+
+  random255: function(){
+    return Math.round(Math.random()*255);
+  },
+
+  randomBgColor: function(){
+    this.lastBgColor.r = this.random255();
+    this.lastBgColor.g = this.random255();
+    this.lastBgColor.b = this.random255();
+    return "rgb("+this.lastBgColor.r+","+this.lastBgColor.g+","+this.lastBgColor.b+")";
+  },
+
+  getSnapCtx: function(img){
+    var snapw=img.naturalWidth,snaph=img.naturalHeight;
+    if( !this.tempCvs ){
+      this.tempCvs = Cr.elm('canvas',{id:'cap-canvas',width:snapw,height:snaph});
+    }else{
+      this.tempCvs.width=snapw;
+      this.tempCvs.height=snaph;
+    }
+    var ctx = this.tempCvs.getContext('2d');
+    ctx.drawImage(img,0,0);
+    return ctx;
+  },
+
+  generateImagesToTakeGiven: function(width,height){ // current window size!!!
+    var availh=document.body.clientHeight-25
+    var availw=document.body.clientWidth-25  // TODO  -this MUST be width of scroll bars plus whatever border width we choose (1 or 2 px);
+    var hr = Math.ceil(height / availh);
+    var wr = Math.ceil(width / availw);
+    this.imgToTake=[];
+    this.imgToTakeIdx=0;
+    var hRemaining = height;
+    for(var sy=0; sy<hr; sy++){
+      var wRemaining = width;
+      for(var sx=0; sx<wr; sx++){
+        this.imgToTake.push({
+          x:sx*availw,
+          y:sy*availh,
+          w:(wRemaining>availw?availw:wRemaining),
+          h:(hRemaining>availh?availh:hRemaining),
+        })
+        wRemaining-=availw;
+      }
+      hRemaining-=availh;
+    }
+  },
+
+  create: function(){ // aka startRotation
+    this.attempts=0;
+
+    gel('arrowsleft').style.display="none",
+    gel('arrowsright').style.display="none";
+
+    var img = document.getElementsByTagName('img')[0];
+    var ow=img.naturalWidth,oh=img.naturalHeight;
+
+    this.imgSize.w=ow, this.imgSize.h=oh; // imgSize is new size
+
+//TODO perist these and just resize as needed: see getSnapCtx
+// TODO for one thing, these are already sized in anticipation of a rotaton occuring.... should happen dynamically
+    this.capCvs = Cr.elm('canvas',{id:'cap-canvas',width:this.imgSize.h,height:this.imgSize.w});
+    this.editCvs = Cr.elm('canvas',{id:'src-canvas',width:this.imgSize.h,height:this.imgSize.w}); // important - if we reuse this, to reset the transform!!!
+    this.snapCvs = Cr.elm('canvas',{id:'edit-mode-canvas',width:document.body.clientWidth,height:document.body.clientHeight,style:'position:absolute;top:0px;left:0px;cursor:wait;',title:'Sorry: you must wait for the operation to be captured.  Feel free to look away.  Click to cancel.',event:['click',this.cancel.bind(this)]}); // could make it position absolute only before capture
+// TODO - do not create until needed and size then, so size can be applied more logically as w,h
+// this.tempCvs - take an arbitrary image and store it in memory for pixel analysis
+// this.capCvs - the final capture to be rendered/saved - accumulated over several snaps
+// this.editCvs - original source image - rotated / edited as needed (already) -  we page through this during stageImageToTake
+// this.snapCvs - this is the visible image we snap pictures of during export
+
+    this.origImg = img;
+    this.created = true;
+  },
+
+  exportResult: function(){
+    this.snapCtx = this.snapCvs.getContext('2d');
+    this.origImg.parentNode.insertBefore(this.snapCvs,this.origImg);
+
+    // normally, we might just grab the canvas here
+    // Uncaught SecurityError: Failed to execute 'toDataURL' on 'HTMLCanvasElement': Tainted canvases may not be exported.
+    //var datUrl = this.editCvs.toDataURL();
+    //navToSrc(datUrl , true, startFileName); // finally render the result
+    // TODO ^ try catch this - since if it works, its truly the best to just export the rotated canvas right away! (preserves transparency, etc) and might work sometimes :D
+    // TODO ^ navToSrc should be performed by a function that can be shared
+
+    this.generateImagesToTakeGiven(this.imgSize.w,this.imgSize.h);
+    this.stageImageToTake();
+
+    chrome.runtime.sendMessage({captureImageModification:1}, null);
+  },
+
+  rotateRight: function(){
+    this.create();
+    var source_img_ctx=this.editCvs.getContext('2d');
+    this.rotate(source_img_ctx, this.origImg, 90, this.imgSize.w ,this.imgSize.h);
+    this.exportResult();
+  },
+
+  rotateLeft: function(){
+    this.create();
+    var source_img_ctx=this.editCvs.getContext('2d');
+    this.rotate(source_img_ctx, this.origImg, -90, this.imgSize.w ,this.imgSize.h);
+    this.exportResult();
+  },
+
+  rotate: function(ctx, img, deg, startW, startH){
+    deg == 90 && ctx.translate(startH,0);
+    deg == -90 && ctx.translate(0,startW);
+    this.imgSize.w = startH;
+    this.imgSize.h = startW;
+    ctx.rotate(deg * Math.PI / 180);
+    ctx.drawImage(img,0,0);
+  },
+
+  stageImageToTake: function(){
+    var snapProps = this.imgToTake[this.imgToTakeIdx];
+    if( !snapProps ) return true; // done
+    this.snapCtx.fillStyle = this.randomBgColor(); // TODO: we will probably clear to transparent color here (the entire cvs)
+    // TODO we will probably store the expected TLC of the image (top left corner) instead of simply expecting !bg color
+    // though it will be quite tricky to preserve transparency in this stage/snap/collect mode - unless we can access transparency data from original image directly
+    this.snapCtx.fillRect(0, 0, this.imgSize.w+2, this.imgSize.h+2);  // TODO: this +2+2 and 1,1 are really this.border(padding) or something like it, also used below
+    this.snapCtx.drawImage(this.editCvs,snapProps.x,snapProps.y,snapProps.w,snapProps.h, 1,1, snapProps.w,snapProps.h);
+    return false; // not done
+  },
+
+  captureSnappedImage: function(ctx, img){
+    var snapProps = this.imgToTake[this.imgToTakeIdx], border = 1;
+    ctx.drawImage(img, border, border, snapProps.w, snapProps.h, snapProps.x, snapProps.y, snapProps.w, snapProps.h );
+  },
+
+  colorAtPosition: function(ctx, x, y){
+    var data = ctx.getImageData(x, y, 1, 1).data;
+    return {r:data[0],g:data[1],b:data[2]};
+  },
+
+  confirmExpectedSnap: function(img){ // return true to always capture even if unexpected
+    var snapCtx = this.getSnapCtx(img);
+    var c = this.colorAtPosition(snapCtx, 0, 0);
+    var cx = this.colorAtPosition(snapCtx, 1, 0);
+    var cy = this.colorAtPosition(snapCtx, 0, 1);
+    var c1 = this.colorAtPosition(snapCtx, 1, 1); // if image is transparent in corner... this will mean it cannot be rotated, which is ok for now
+    return c.r == this.lastBgColor.r && c.g == this.lastBgColor.g && c.b == this.lastBgColor.b
+        && cx.r == this.lastBgColor.r && cx.g == this.lastBgColor.g && cx.b == this.lastBgColor.b
+        && cy.r == this.lastBgColor.r && cy.g == this.lastBgColor.g && cy.b == this.lastBgColor.b
+        && c1.r != this.lastBgColor.r && c1.g != this.lastBgColor.g && c1.b != this.lastBgColor.b; // transparent images, if rotated in this mode, loose transparency
+  },
+
+  snapLoaded: function(dataUrl){
+    if( !this.created ) return;
+    var ctx = this.capCvs.getContext('2d');
+    var img = Cr.elm('img',{src:dataUrl, event:['load', function(){
+      var done = false;
+
+      if( this.confirmExpectedSnap(img) ){ // looks good
+        this.captureSnappedImage(ctx,img);
+        this.imgToTakeIdx++;
+        done = this.stageImageToTake();
+      }else{
+        ++this.attempts; // failed attempt
+        console.log('retrying...')
+      }
+
+      if(!done){
+        if( this.attempts < 20 ){
+          console.log('capturing tab to reconstruct image...');
+          window.scrollTo(0, 0);
+          setTimeout(function(){
+            chrome.runtime.sendMessage({captureImageModification:1}, null);
+          }, 220);
+        }else{
+          console.warn('giving up on capturing result.... unexpected format encountered.');
+          this.exitEditor();
+        }
+
+      }else{
+        var datUrl = this.capCvs.toDataURL();
+        navToSrc(datUrl , true, startFileName); // finally render the result
+        var saveBtn = gel('save');
+        saveBtn.style.display="inline";
+        saveBtn.download=unescape(startFileName);
+        var fileBlob = this.dataUrlToFile(datUrl);
+        saveBtn.href = URL.createObjectURL(fileBlob);
+        this.exitEditor();
+      }
+
+    }.bind(this)]});
+  },
+
+  dataUrlToBlob: function(dataUrl){
+    var binary = atob(dataUrl.split(',')[1]);
+    var array = [];
+    for(var i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+    }
+    return new Blob([new Uint8Array(array)], {type: 'image/png'});
+  },
+  dataUrlToFile: function(dataUrl){
+    var binary = atob(dataUrl.split(',')[1]);
+    var array = [];
+    for(var i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+    }
+    return new File([new Uint8Array(array)], startFileName, {type: 'image/png'});
+  },
+  cancel:function(){
+    this.exitEditor();
+  },
+  exitEditor: function(){
+    this.snapCvs.parentNode.removeChild(this.snapCvs);
+    gel('arrowsleft').style.display="block";
+    gel('arrowsright').style.display="block";
+    this.created=false;
+  },
+
 }
 
 function visitOptions(){
@@ -617,6 +884,8 @@ function recievedDirectoryData(dataObj){
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse){
   if (request.dir_cache){
     recievedDirectoryData(request)
+  }else if(request.imageCaptured){
+    editMode.snapLoaded(request.imageDataUrl);
   }
   sendResponse({});
 });
@@ -645,21 +914,18 @@ function winLocGoCurrent(){
   window.location=directoryURL+startFileName;
 }
 
-function navToFile(file,suppressPushState){
-  if(!fastmode && !isorwas_full_screen){
-    window.location=directoryURL+encodeURIComponent(file);
-    return;
-  }
+function navToSrc(src,suppressPushState,loadedFileName){
+
   //this would be WAY better!  unfortunately:
   //"A history state object with URL 'http://webifire/' cannot be created in a document with origin 'null'."
   // - we can load the next image without reloading the page - we CANNOT update the URL :/...
 
   //document.getElementsByTagName('img')[0].src=directoryURL+file;
   if(typeof(suppressPushState)=='undefined')suppressPushState=false;
-  var loadedFileName = file;
   var origImg = document.getElementsByTagName('img')[0];
   var origNextSibl = origImg.nextSibling;
   var newimg = origImg.cloneNode();
+  newimg.setAttribute('name',loadedFileName);
   newimg.removeAttribute('width');
   newimg.removeAttribute('height');
   updateThumbnail();
@@ -673,12 +939,12 @@ function navToFile(file,suppressPushState){
     //   dirFiles.splice(dirCurFile, 1);
     //   navToFile(dirFiles[dirCurFile].file_name); // if going fwd, this will be the right file
     // }
-    var cvs = Cr.elm('canvas',{width:400,height:400});
+    var cvs = Cr.elm('canvas',{width:600,height:400});
     var ctx = cvs.getContext('2d');
     ctx.font = "24px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Error Loading", 200, 175);
-    ctx.fillText('"'+file+'"', 200, 225);
+    ctx.fillText("Error Loading", 300, 175);
+    ctx.fillText('"'+loadedFileName+'"', 300, 225);
     newimg.src = cvs.toDataURL();
   };
   newimg.onload=function(ev){
@@ -720,7 +986,16 @@ function navToFile(file,suppressPushState){
     fetchNewDirectoryListing(true);
     //don't do this every time! slows things down!
   }
-  newimg.src=directoryURL+encodeURIComponent(file);
+  newimg.src=src;
+}
+
+function navToFile(file,suppressPushState){
+  if(!fastmode && !isorwas_full_screen){
+    window.location=directoryURL+encodeURIComponent(file);
+    return;
+  }
+  gel('save').style.display="none";
+  navToSrc(directoryURL+encodeURIComponent(file),suppressPushState,file);
 }
 
 function navigationStatePop(ev){//NOT implemented (cannot trigger, cannot replace state)

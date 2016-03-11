@@ -29,6 +29,10 @@
      "img/play.png",
      "img/pause.png",
      "img/ffwd.png",
+     "img/r_right.png",
+     "img/r_left.png",
+     "img/save.png",
+     "img/edit.png",
      "img/fillscreen.png",
      "img/gear.png",
      "img/thumbs.png",
@@ -37,5 +41,5 @@
    "permissions": [
       "tabs", "storage", "<all_urls>"
    ],
-   "version": "0.0.0.18"
+   "version": "0.0.0.19"
 }
