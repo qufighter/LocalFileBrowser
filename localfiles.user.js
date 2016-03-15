@@ -584,12 +584,29 @@ var editMode = { // not really edit mode yet
         }
 
       }else{
-        var datUrl = this.capCvs.toDataURL();
+        var type = null;
+        // working types: http://kangax.github.io/jstests/toDataUrl_mime_type_test/
+        var types = {
+          'png':"image/png",
+          'jpg':"image/jpeg",
+          'jpeg':"image/jpeg"
+        }
+        var saveFileName = startFileName;
+        var ext=saveFileName.match(/\.([A-z]+)$/);
+        if( ext.length == 2 ){
+          ext = ext[1].toLowerCase();
+        }
+        type = types[ext];
+        if( !type ){
+          type = types['png'];
+          saveFileName+='.png';
+        }
+        var datUrl = this.capCvs.toDataURL(type, 1.0);
         navToSrc(datUrl , true, startFileName); // finally render the result
         var saveBtn = gel('save');
         saveBtn.style.display="inline";
-        saveBtn.download=unescape(startFileName);
-        var fileBlob = this.dataUrlToFile(datUrl);
+        saveBtn.download=unescape(saveFileName);
+        var fileBlob = this.dataUrlToFile(datUrl, type, saveFileName);
         saveBtn.href = URL.createObjectURL(fileBlob);
         this.exitEditor();
       }
@@ -597,21 +614,22 @@ var editMode = { // not really edit mode yet
     }.bind(this)]});
   },
 
-  dataUrlToBlob: function(dataUrl){
+  dataUrlToBlob: function(dataUrl, type){
     var binary = atob(dataUrl.split(',')[1]);
     var array = [];
     for(var i = 0; i < binary.length; i++) {
         array.push(binary.charCodeAt(i));
     }
-    return new Blob([new Uint8Array(array)], {type: 'image/png'});
+    return new Blob([new Uint8Array(array)], {type: type});
   },
-  dataUrlToFile: function(dataUrl){
+  dataUrlToFile: function(dataUrl, type, saveFileName){
+    console.log('save type', type);
     var binary = atob(dataUrl.split(',')[1]);
     var array = [];
     for(var i = 0; i < binary.length; i++) {
         array.push(binary.charCodeAt(i));
     }
-    return new File([new Uint8Array(array)], startFileName, {type: 'image/png'});
+    return new File([new Uint8Array(array)], saveFileName, {type: type});
   },
   cancel:function(){
     this.exitEditor();
