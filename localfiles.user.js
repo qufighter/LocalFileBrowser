@@ -601,7 +601,9 @@ var editMode = { // not really edit mode yet
           type = types['png'];
           saveFileName+='.png';
         }
-        var datUrl = this.capCvs.toDataURL(type, 1.0);
+        var datUrl = this.capCvs.toDataURL(type, 1.0); // TODO: support jpg quality other than 100?
+        // TODO: check this is the requested type, otherwise add the proper extension
+        // If the requested type is not image/png, but the returned value starts with data:image/png, then the requested type is not supported.
         navToSrc(datUrl , true, startFileName); // finally render the result
         var saveBtn = gel('save');
         saveBtn.style.display="inline";
