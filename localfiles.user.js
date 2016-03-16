@@ -1,4 +1,4 @@
-var directoryURL=window.location.protocol + '//' + window.location.pathname;
+var directoryURL=window.location.protocol + '//' + window.location.host + window.location.pathname;
 var bodyExists=false;
 var timeoutId=0;
 var fileUrlInitComplete = false;
