@@ -625,7 +625,6 @@ var editMode = { // not really edit mode yet
     return new Blob([new Uint8Array(array)], {type: type});
   },
   dataUrlToFile: function(dataUrl, type, saveFileName){
-    console.log('save type', type);
     var binary = atob(dataUrl.split(',')[1]);
     var array = [];
     for(var i = 0; i < binary.length; i++) {
