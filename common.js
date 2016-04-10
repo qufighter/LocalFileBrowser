@@ -9,7 +9,9 @@ function isValidFile(f){
 	return f.match(rx);
 }
 
-function processFileRows(directoryURL, sentStartFileName, resp, cbf){
+function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf){
+	//var resDirName = resp.match(/start\(\"([\/\w]+)\"\);/);
+	//console.log('processFileRows', directoryURL, sentStartFileName, resDirName[1], storeItAll)
 	startFileName = sentStartFileName;
 	var newDirFiles=[];
 	var rows=resp.split('addRow("');
@@ -50,9 +52,13 @@ function processFileRows(directoryURL, sentStartFileName, resp, cbf){
 	};
 
 	//console.log('saving directory list for dirCurFile '+ dirCurFile)
-	chrome.storage.local.set(storeObj, function(){
+	if( storeItAll ){
+		chrome.storage.local.set(storeObj, function(){
+			cbf(storeObj);
+		});
+	}else{
 		cbf(storeObj);
-	});
+	}
 }
 
 function determineSort(initial){
@@ -81,6 +87,9 @@ var sorts = {
 	},
 	filename_reverse: function(a,b){
 		return -sorts.filename(a,b);
+	},
+	random: function(a,b){
+		return Math.random() < 0.5;
 	}
 };
 
@@ -94,7 +103,8 @@ function loadCache(cbf){
 }
 
 function loadPrefs(cbf){
-	chrome.storage.local.get({matchfiles:false, sorttype:false},function(obj){
+	/* defaults for pref read */
+	chrome.storage.local.get({fastmode: false, matchfiles:false, sorttype:false},function(obj){
 		// after saving prefs current directory is cleared forcing cache refresh...  resort need not be applied
 		if( obj.matchfiles && obj.matchfiles.length ){
 			allowedExt = obj.matchfiles;
@@ -102,6 +112,7 @@ function loadPrefs(cbf){
 		if( obj.sorttype && sorts[obj.sorttype] ){
 			directorySortType = obj.sorttype;
 		}
+		if(obj.fastmode && obj.fastmode=='true')fastmode=true;
 		if(typeof(cbf)=='function')cbf(obj);
 	});
 }

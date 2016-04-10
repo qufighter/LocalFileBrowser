@@ -28,13 +28,22 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             chrome.storage.local.get({'fetching':'0'}, function(obj){
               if( obj.fetching == sentDirectoryURL ){
                 chrome.storage.local.set({'fetching':'0'}, function(){});
-                processFileRows(sentDirectoryURL, sentStartFileName, http.responseText, function(resultObj){
+                processFileRows(sentDirectoryURL, sentStartFileName, http.responseText, true, function(resultObj){
                   if( request.respond ){
                     chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){});
                   }
                 });
               }else{
-                console.log('loaded a directory list that is not current, skipping.');
+                // this is not workign well for multiple simultaneous requests since one arbatrary one of them is always prioritized
+                // processFileRows(sentDirectoryURL, sentStartFileName, http.responseText, false, function(resultObj){
+                //   if( request.respond ){
+                //     chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){});
+                //   }
+                // });
+                // some observed issues:
+                //   1) 2 windows open looking at files, one looking at directory, somehow reloadPrefs is triggered and a LOT more requests created (possibly resolved)
+                //   2) one of the direcotries will stop owrking, and start browing the other one, need to inspect further what gets returned
+                console.log('loaded a directory list that is not current');//, we processed teh rows and returned them but did not store them.');
               }
             });
           }
@@ -45,8 +54,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       }
     });
   }else if(request.reloadPrefs){
-    loadPrefs();
-    chrome.storage.local.set({'dir_url':'','fetching':'0'}, function(){}); // Force Cache Refresh
+    loadPrefs(function(){
+      chrome.storage.local.set({'dir_url':'','fetching':'0'}, function(){ // Force Cache Refresh
+        chrome.tabs.query({}, function(tabs) {
+            var message = {reloadPrefs: 1};
+            for (var i=0,l=tabs.length; i<l; i++) {
+              chrome.tabs.sendMessage(tabs[i].id, message);
+            }
+        });
+      });
+    });
   }
   sendResponse({}); // sent response cannot be very delayed, get it out of the way
 });
