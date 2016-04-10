@@ -1,4 +1,4 @@
-var directoryURL=window.location.protocol + '//' + window.location.host + window.location.pathname;
+var directoryURL=currentDirectoryUrl();
 var bodyExists=false;
 var timeoutId=0;
 var fileUrlInitComplete = false;
@@ -26,6 +26,15 @@ function getAndSetBodyStyle(){
       document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
     }
   });
+}
+
+function currentDirectoryUrl(){
+  return window.location.protocol + '//' + window.location.host + window.location.pathname;
+}
+
+function currentStartFileName(){
+  var dirparts=currentDirectoryUrl().split('/');
+  return dirparts[dirparts.length-1];
 }
 
 function initFileUrl(){
@@ -1054,7 +1063,9 @@ function navigationStatePop(ev){//NOT implemented (cannot trigger, cannot replac
 }
 function navigationStateHashChange(ev){
   var fname = decodeURIComponent(window.location.hash.replace('#',''));
-  if( startFileName != fname){
+  if( !fname ){
+    navToFile(currentStartFileName(),true);
+  }else if( startFileName != fname){
     navToFile(fname,true);
   }
 }
