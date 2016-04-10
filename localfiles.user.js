@@ -2,30 +2,33 @@ var directoryURL=window.location.protocol + '//' + window.location.host + window
 var bodyExists=false;
 var timeoutId=0;
 var fileUrlInitComplete = false;
-var singleFileMode = false;
+var singleFileMode = directoryURL.substr(directoryURL.length-1,1)!='/';
 
 chrome.storage.local.get({matchfiles:false},function(obj){
   if( obj.matchfiles && obj.matchfiles.length ){
     allowedExt = obj.matchfiles;
-    if( !fileUrlInitComplete ){
+    if( !fileUrlInitComplete && singleFileMode ){
       initFileUrl();
     }
   }
 });
 
-if(directoryURL.substr(directoryURL.length-1,1)!='/'){
-  chrome.storage.local.get({bodystyle:false},function(obj){
-    if(obj.bodystyle && obj.bodystyle.length > 0){
-      document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
-    }
-  });
+if(singleFileMode){
+  getAndSetBodyStyle();
   initFileUrl();
 }else{
   isViewingDirectory_LoadThumbnails();
 }
 
+function getAndSetBodyStyle(){
+  chrome.storage.local.get({bodystyle:false},function(obj){
+    if(obj.bodystyle && obj.bodystyle.length > 0){
+      document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
+    }
+  });
+}
+
 function initFileUrl(){
-  singleFileMode=true;
   if(isValidFile(directoryURL)){
     fileUrlInitComplete=true;
     var dirparts=directoryURL.split('/');
@@ -168,6 +171,7 @@ function hideExtraControlsLeft(){
 function showExtraControlsRight(){
   hideExtraControlsLeft();
   for(var i in extraControlsRight){
+    if( !fastmode && (extraControlsRight[i].id == 'fps'/* || extraControlsRight[i].id == 'ffwd'*/) ) continue; // these controls only work in fast mode
     extraControlsRight[i].style.display="inline";
   }
 }
@@ -223,7 +227,7 @@ function attemptCreateNextPrevArrows(){
   leftElm.push(extraControlsLeft[extraControlsLeft.length-1]);
 
   extraControlsLeft.push(
-    Cr.elm('img',{'title':'Fullscreen',
+    Cr.elm('img',{'title':'Fullscreen',id:'fs_go',
                     'src':chrome.extension.getURL('img/fillscreen.png'),
                     width:'77',events:[['click',fs_go]],
                     style:'cursor:pointer;display:none;vertical-align: bottom;'
@@ -357,7 +361,7 @@ function createExtraControls(){
   extraControlsRight.push(tempElm);
 
   tempElm = Cr.elm('img',{
-    title:"Left Right",
+    title:"Rotate Left",
     src:chrome.extension.getURL('img/r_left.png'),
     width:'28',events:[['mouseup',rotate_left],['dragstart',cancelEvent]],
     style:'cursor:pointer;display:none;vertical-align: bottom;',
@@ -766,6 +770,12 @@ function pageScrolledHandler(){
     }
   }
 }
+function navToFileIfFastMode(ev){
+  if( !fastmode && !confirm('fast mode not enabled, you will loose thumbnails, are you sure?') ){
+    return;
+  }
+  navToFileByElmName(ev);
+}
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
   window.addEventListener('scroll', pageScrolled);
@@ -783,7 +793,7 @@ function initSingleImageThumbnails(){
     }
   }else{
     thmhld=Cr.elm('div',{id:'thmhld',style:"margin:20px 18% 75px 18%;"},[],document.body);
-    createThumbnailsBrowser(thmhld,navToFileByElmName);
+    createThumbnailsBrowser(thmhld,navToFileIfFastMode);
     window.addEventListener('scroll', pageScrolled);
     window.addEventListener('resize', pageScrolled);
   }
@@ -817,10 +827,9 @@ function updateThumbnail(){
   if( curThumb ) curThumb.style.border=SELECTED_THUMBNAIL_BORDER;
 }
 
-
 function prepareThumbnailsBrowser(){
   loadPrefs(function(){
-    processFileRows(directoryURL, startFileName, document.body.innerHTML, function(){/* saved to chrome storage, if directory didn't change*/});
+    processFileRows(directoryURL, startFileName, document.body.innerHTML, false, function(){});
   });
   Cr.elm('button',{id:'loadThumbsBtn',events:['click',initDirectoryThumbnails]},[Cr.txt('Show Thumbnails...')],document.body)
 }
@@ -866,19 +875,20 @@ function doneLoading(){
   if( m ) document.body.removeChild(m);
 }
 
-var awaitingDirectoryResponse=false;
+var awaitingDirectoryResponse=false, cacheRequestCounter=0;
 function fetchNewDirectoryListing(cacheIsCurrent){
   if( cacheIsCurrent ){
-    //console.log('considering transmitting casual directory list request');
-    // this should only happen rarely, once per 30 seconds or greater, maybe several minutes
-    //chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName}, null);
-
-    // when settings are changed the cache is invalidated
-    //console.log('new directory listing requested but cacheIsCurrent, skipping...')
-  }else if(!awaitingDirectoryResponse){
+    if( ++cacheRequestCounter < ((dirFiles.length*2) || 3) ){
+      return;
+    }else{
+      pauseAutoPlay(); // until directory loads
+    }
+  }
+  if(!awaitingDirectoryResponse){
     console.log('transmitting directory list request for Match Files configuration');
     chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName,respond:true}, null);
-    Cr.elm('div',{id:'loading-message',title:'Local Image Viewer Chrome Extension. Filter May Not Match File. Configure from options.',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[Cr.txt('LOADING DIRECTORY '),Cr.elm('span',{event:['click',cancelLoad]},[Cr.txt('Cancel')])],document.body);
+    Cr.elm('div',{id:'loading-message',title:'Local Image Viewer Chrome Extension. Filter May Not Match File. Configure from options.',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[Cr.txt('LOADING DIRECTORY '),Cr.elm('span',{style:'cursor:pointer',event:['click',cancelLoad]},[Cr.txt('Cancel')])],document.body);
+    cacheRequestCounter=0;
   }
 }
 
@@ -894,6 +904,7 @@ function recievedDirectoryData(dataObj){
       dirCurFile = dataObj.dir_current - 0;
       doneLoading();
       attemptCreateNextPrevArrows();
+      resumeAutoPlay();
     }else{
       console.log('We got a directory cache back that is not current... ignoring...' + dataObj.dir_url +' != '+ directoryURL);
     }
@@ -905,6 +916,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse){
     recievedDirectoryData(request)
   }else if(request.imageCaptured){
     editMode.snapLoaded(request.imageDataUrl);
+  }else if(request.reloadPrefs){
+    if(singleFileMode){
+      getAndSetBodyStyle();
+      loadPrefs(function(){
+        // 1) need to know what mode we are running here (singleFileMode)
+        // 2) we can re-sort without scanning again
+        //fetchNewDirectoryListing(false); // while this could work good, fails for multiple tabs, only one will load
+      });
+    }
   }
   sendResponse({});
 });
@@ -958,13 +978,18 @@ function navToSrc(src,suppressPushState,loadedFileName){
     //   dirFiles.splice(dirCurFile, 1);
     //   navToFile(dirFiles[dirCurFile].file_name); // if going fwd, this will be the right file
     // }
-    var cvs = Cr.elm('canvas',{width:600,height:400});
+    var props = {width:600,height:400};
+    var cvs = Cr.elm('canvas',props);
     var ctx = cvs.getContext('2d');
+    ctx.fillStyle = "rgb(0,0,0)";
+    ctx.fillRect(0, 0, props.width, props.height);
+    ctx.fillStyle = "rgb(255,255,255)";
     ctx.font = "24px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("Error Loading", 300, 175);
     ctx.fillText('"'+loadedFileName+'"', 300, 225);
     newimg.src = cvs.toDataURL();
+    resumeAutoPlay();
   };
   newimg.onload=function(ev){
     if(!origImg || !origImg.parentNode )return;
@@ -1002,7 +1027,8 @@ function navToSrc(src,suppressPushState,loadedFileName){
     }
     newimg.addEventListener('click',zoom_in);
     //now refrsh our copy of the directory listing....
-    fetchNewDirectoryListing(true);
+    resumeAutoPlay();
+    fetchNewDirectoryListing(true); // this will potentially pause auto play again!
     //don't do this every time! slows things down!
   }
   newimg.src=src;
@@ -1013,7 +1039,9 @@ function navToFile(file,suppressPushState){
     window.location=directoryURL+encodeURIComponent(file);
     return;
   }
-  gel('save').style.display="none";
+  if( singleFileMode ){
+    gel('save').style.display="none";
+  }
   navToSrc(directoryURL+encodeURIComponent(file),suppressPushState,file);
 }
 
@@ -1038,6 +1066,7 @@ function preLoadFile(file){
 }
 
 function nav_up(){
+  // TODO: support open in a new tab
   window.location=directoryURL;
 }
 
@@ -1072,27 +1101,49 @@ function auto_play(ev){
   if(ev && ev.which && ev.which == 3)return;
   if( autoplayInterval ){
     stop_auto_play();
+  }else if( !fastmode ){
+    alert('fast mode not enabled, cannot autoplay');
   }else{
     var fps = gel('fps');
     var ffwd = gel("ffwd");
     var timeout = Math.round(1000 / (fps.value - 0));
-    fps.style.display="none";
     ffwd.src=chrome.extension.getURL("img/pause.png");
-    autoplayInterval = setInterval(function(){nav_next()},timeout);
+    autoplayInterval = setInterval(function(){ // todo: compare with setTimeout removeTimeout
+      nav_next();
+      pauseAutoPlay();
+    },timeout);
     setTimeout(function(){
       window.addEventListener('click', stop_auto_play);
     },5);
   }
 }
-function stop_auto_play(){
+function pause_auto_play(ev){
   if( autoplayInterval ){
+    if(ev && ev.target.id == 'fs_go'){return;} // fullscreen button (at least when going fullscreen) should not stop autoplay
     window.removeEventListener('click', stop_auto_play);
-    var fps = gel('fps');
     var ffwd = gel("ffwd");
     clearInterval(autoplayInterval);
     autoplayInterval = 0;
-    fps.style.display="inline";
     ffwd.src=chrome.extension.getURL("img/play.png");
+  }
+}
+function stop_auto_play(ev){
+  pause_auto_play(ev);
+  was_auto_playing_before_paused=false;
+}
+
+var was_auto_playing_before_paused=false;
+function pauseAutoPlay(){
+  was_auto_playing_before_paused = autoplayInterval || false;
+  if( was_auto_playing_before_paused ){
+    pause_auto_play(); // this will prevent lag, we can resume at a later time
+  }
+}
+
+function resumeAutoPlay(){
+  if( was_auto_playing_before_paused ){
+    auto_play();
+    was_auto_playing_before_paused=false;
   }
 }
 

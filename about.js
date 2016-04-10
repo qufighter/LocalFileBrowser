@@ -40,10 +40,11 @@ function applyDependsTrue(ev){
 
 function getSortTypeOptions(curVal){
 	var sortTypes=[
-		{type: "filename", name: "Filename A-Z (fastest)"},
+		{type: "filename", name: "Filename A-Z (fastest, default)"},
 		{type: "filename_reverse", name: "Filename Z-A"},
 		{type: "date_desc", name: "Date Modified From Newest"},
 		{type: "date_asc", name: "Date Modified From Oldest"},
+		{type: "random", name: "Random order"},
 	];
 	var sorts=[];
 	for( var i=0,l=sortTypes.length; i<l; i++ ){
@@ -52,8 +53,8 @@ function getSortTypeOptions(curVal){
 	return sorts;
 }
 
-function begin(){
-	chrome.storage.local.get({leturlbarbreak:'false',fastmode:'false',bodystyle:'',sorttype:'filename',matchfiles:'.JPG|.GIF|.PNG|.JPEG'},function(stor){
+function begin(){ /* This is where we set the "first view prefs" defaults */
+	chrome.storage.local.get({leturlbarbreak:'false',fastmode:'false',bodystyle:'background-color: white;',sorttype:'filename',matchfiles:'.JPG|.GIF|.PNG|.JPEG'},function(stor){
 
 		Cr.elm('div',{class:'label_rows'},[
 			Cr.elm('label',{},[
@@ -80,7 +81,7 @@ function begin(){
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
 				Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype)),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' ')])
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' save then refresh page or change directory')])
 			]),
 			Cr.elm('input',{type:'button',value:'Save',event:['click',saveSettings]})
 		],gel('options'));
