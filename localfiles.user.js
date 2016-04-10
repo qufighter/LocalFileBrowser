@@ -838,7 +838,7 @@ function updateThumbnail(){
 
 function prepareThumbnailsBrowser(){
   loadPrefs(function(){
-    processFileRows(directoryURL, startFileName, document.body.innerHTML, false, function(){});
+    processFileRows(directoryURL, startFileName, document.body.innerHTML, true, function(){});
   });
   Cr.elm('button',{id:'loadThumbsBtn',events:['click',initDirectoryThumbnails]},[Cr.txt('Show Thumbnails...')],document.body)
 }
