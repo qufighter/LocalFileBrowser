@@ -29,14 +29,12 @@ function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf)
 			if(f==startFileName || f0 == startFileName ){ // determineSort function seeks again
 				dirCurFile=newDirFiles.length;
 			}
-			datetime = rDat[4].split(', ');
-			date = datetime[0];
-			time = datetime[1];
 			size = rDat[3];
-			timestamp = new Date(date + ' ' + time).getTime();
+			datetime = rDat[6];
+			timestamp = rDat[5];
 
 			//console.log(f, size,  date, time, timestamp)
-			if( size != "0 B" ){ // we must skip 0byte images where content scripts do not run!
+			if( size > 0 ){ // we must skip 0byte images where content scripts do not run!
 				newDirFiles.push({file_name:f0, date:timestamp});
 			}
 		}

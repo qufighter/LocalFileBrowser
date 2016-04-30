@@ -935,6 +935,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse){
         // 1) need to know what mode we are running here (singleFileMode)
         // 2) we can re-sort without scanning again
         //fetchNewDirectoryListing(false); // while this could work good, fails for multiple tabs, only one will load
+        /// - can't we just call the sort function directly (common.js determineSort)
       });
     }
   }
