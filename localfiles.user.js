@@ -724,11 +724,16 @@ function getOffset( el ){
     }return { y: _y, x: _x };
 }
 function isElementInView(elm, thmhld){
-  var elp=getOffset(elm);
   var scry=window.pageYOffset;
   var maxy=scry + window.innerHeight;
-  if( thmhld ) elp.y -= thmhld.scrollTop; // container scroll
-  if(elp.y < maxy && elp.y + elm.offsetHeight > scry) return true;
+  var thmoffset = getOffset(thmhld);
+  var hldScry = thmhld.scrollTop;
+  var hldMaxy = hldScry + thmhld.offsetHeight;
+  if(thmoffset.y < maxy && thmoffset.y + thmhld.offsetHeight > scry){
+    if(elm.offsetTop <= hldMaxy && elm.offsetTop + elm.offsetHeight >= hldScry){
+       return true;
+    }
+  }
   return false;
 }
 
@@ -787,11 +792,14 @@ function navToFileIfFastMode(ev){
   }
   navToFileByElmName(ev);
 }
+function createThumbHld(styles){
+  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;overflow-y:scroll;position:relative;"+styles},[],document.body);
+}
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
   window.addEventListener('scroll', pageScrolled);
   window.addEventListener('resize', pageScrolled);
-  createThumbnailsBrowser(document.body,navToFileByElmName);
+  createThumbnailsBrowser(createThumbHld(''),navToFileByElmName);
   pageScrolled();
 }
 function initSingleImageThumbnails(){
@@ -803,7 +811,7 @@ function initSingleImageThumbnails(){
       thmhld.style.display='none';
     }
   }else{
-    thmhld=Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;overflow-y:scroll;height:250px;"},[],document.body);
+    thmhld=createThumbHld('height:250px;');
     createThumbnailsBrowser(thmhld,navToFileIfFastMode);
     window.addEventListener('scroll', pageScrolled);
     window.addEventListener('resize', pageScrolled);
@@ -835,8 +843,14 @@ function createSingleThumb(fileIndex,destination,clFn){
 }
 function updateThumbnail(){
   if( curThumb ) curThumb.style.border='';
-  curThumb=document.getElementById('cicn_'+dirCurFile);
-  if( curThumb ) curThumb.style.border=SELECTED_THUMBNAIL_BORDER;
+  curThumb=gel('cicn_'+dirCurFile);
+  if( curThumb ){
+    var thmhld=gel('thmhld');
+    curThumb.style.border=SELECTED_THUMBNAIL_BORDER;
+    if( !isElementInView(curThumb, thmhld) ){
+      thmhld.scrollTop=curThumb.offsetTop;
+    }
+  }
 }
 
 function prepareThumbnailsBrowser(){
