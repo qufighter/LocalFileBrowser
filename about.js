@@ -5,6 +5,16 @@
 		leturlbarbreak,fastmode,bodystyle
 	</div>
 */
+
+/* This is where we set the "first view prefs" defaults */
+var _optionDefaults = {
+	leturlbarbreak:'false',
+	fastmode:'false',
+	bodystyle:'background-color: white;',
+	sorttype:'filename',
+	matchfiles:'.JPG|.GIF|.PNG|.JPEG'
+};
+
 function gel(l){
 	return document.getElementById(l);
 }
@@ -53,8 +63,23 @@ function getSortTypeOptions(curVal){
 	return sorts;
 }
 
-function begin(){ /* This is where we set the "first view prefs" defaults */
-	chrome.storage.local.get({leturlbarbreak:'false',fastmode:'false',bodystyle:'background-color: white;',sorttype:'filename',matchfiles:'.JPG|.GIF|.PNG|.JPEG'},function(stor){
+function clickedLink(ev){
+	chrome.tabs.create({
+		url: ev.target.href,
+		active: true
+	}, function(t){})
+}
+
+function showDefaults(){
+	var options = gel('options'), found, opt;
+	for( opt in _optionDefaults ){
+		found = options.querySelector('input#'+opt+',select#'+opt);
+		if( found ) found.value = _optionDefaults[opt];
+	}
+}
+
+function begin(){
+	chrome.storage.local.get(_optionDefaults,function(stor){
 
 		Cr.elm('div',{class:'label_rows'},[
 			Cr.elm('label',{},[
@@ -68,7 +93,7 @@ function begin(){ /* This is where we set the "first view prefs" defaults */
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Body CSS')]),
 				Cr.elm('input',{type:'text',id:'bodystyle',value:stor.bodystyle,valuebinding:'value'}),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' background-color:white;')])
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.bodystyle+' or pick a different css color value')])
 			]),
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[
@@ -76,17 +101,20 @@ function begin(){ /* This is where we set the "first view prefs" defaults */
 					Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
 				]),
 				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' .JPG|.GIF|.PNG|.JPEG')])
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.matchfiles)])
 			]),
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
 				Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype)),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' save then refresh page or change directory')])
 			]),
-			Cr.elm('input',{type:'button',value:'Save',event:['click',saveSettings]})
+			Cr.elm('input',{type:'button',value:'\uD83D\uDCBE Save',event:['click',saveSettings]}),
+			Cr.elm('input',{type:'button',value:'Show Defaults',event:['click',showDefaults]}),
 		],gel('options'));
 		
 	});
+
+	document.getElementById('chrome-extensions').addEventListener('click', clickedLink);
 }
 
 document.addEventListener('DOMContentLoaded',begin);
