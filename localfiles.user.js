@@ -4,6 +4,10 @@ var timeoutId=0;
 var fileUrlInitComplete = false;
 var singleFileMode = directoryURL.substr(directoryURL.length-1,1)!='/';
 
+// to toggle bg color:
+// getComputedStyle(document.body).getPropertyValue('background-color')
+// "rgb(255, 192, 203)"
+
 chrome.storage.local.get({matchfiles:false},function(obj){
   if( obj.matchfiles && obj.matchfiles.length ){
     allowedExt = obj.matchfiles;
@@ -796,8 +800,9 @@ function navToFileIfFastMode(ev){
   }
   navToFileByElmName(ev);
 }
+var defaultThumhldHeight = 250;
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;position:relative;"+styles,curheight:250},[],document.body);
+  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;position:relative;"+styles,curheight:defaultThumhldHeight},[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
@@ -815,7 +820,7 @@ function initSingleImageThumbnails(){
       thmhld.style.display='none';
     }
   }else{
-    thmhld=createThumbHld('height:250px;overflow-y:auto;');
+    thmhld=createThumbHld('height:'+defaultThumhldHeight+'px;overflow-y:auto;');
     createThumbnailsBrowser(thmhld,navToFileIfFastMode);
     window.addEventListener('scroll', pageScrolled);
     window.addEventListener('resize', pageScrolled);
@@ -830,17 +835,22 @@ function mwheelf(ev){
   if( ev.target == thmhld ) return;
   if( thmhld ){
     if( ev.wheelDeltaY < 0 ){
-      // if thm hodler is not full height for current thumb contents and we are scrolled down all the way on the document
-      if( thmhld.clientHeight < thmhld.scrollHeight && window.innerHeight + window.scrollY + 1 >= document.body.scrollHeight ){
+      if( thmhld.clientHeight < thmhld.scrollHeight && isWindowScrollYMaxed() ){
         thmhld.setAttribute('curheight', (thmhld.getAttribute('curheight') - 0) + 50);
-      }else if( window.scrollY == 0){
-        thmhld.setAttribute('curheight', 250);
+      }
+    }else{
+      if( window.scrollY == 0){
+        thmhld.setAttribute('curheight', defaultThumhldHeight);
         updateThumbnail();
       }
-      thmhld.style.height = thmhld.getAttribute('curheight')+'px';
     }
+    thmhld.style.height = thmhld.getAttribute('curheight')+'px';
   }
 }
+function isWindowScrollYMaxed(){
+  return window.innerHeight + window.scrollY + 1 >= document.body.scrollHeight;
+}
+
 function createThumbnailsBrowser(destination,clFn){
   var start = dirCurFile - 5;
   if( start < 0 ) start = 0;
