@@ -797,7 +797,7 @@ function navToFileIfFastMode(ev){
   navToFileByElmName(ev);
 }
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;position:relative;"+styles},[],document.body);
+  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;position:relative;"+styles,curheight:250},[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
@@ -820,8 +820,26 @@ function initSingleImageThumbnails(){
     window.addEventListener('scroll', pageScrolled);
     window.addEventListener('resize', pageScrolled);
     thmhld.addEventListener('scroll', pageScrolled);
+    window.addEventListener('mousewheel', mwheelf);
   }
   window.scrollBy(0,95);
+}
+function mwheelf(ev){
+  if( ev.target.nodeName == 'CANVAS' ) return;
+  var thmhld=gel('thmhld');
+  if( ev.target == thmhld ) return;
+  if( thmhld ){
+    if( ev.wheelDeltaY < 0 ){
+      // if thm hodler is not full height for current thumb contents and we are scrolled down all the way on the document
+      if( thmhld.clientHeight < thmhld.scrollHeight && window.innerHeight + window.scrollY + 1 >= document.body.scrollHeight ){
+        thmhld.setAttribute('curheight', (thmhld.getAttribute('curheight') - 0) + 50);
+      }else if( window.scrollY == 0){
+        thmhld.setAttribute('curheight', 250);
+        updateThumbnail();
+      }
+      thmhld.style.height = thmhld.getAttribute('curheight')+'px';
+    }
+  }
 }
 function createThumbnailsBrowser(destination,clFn){
   var start = dirCurFile - 5;
