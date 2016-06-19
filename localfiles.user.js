@@ -360,7 +360,7 @@ function createExtraControls(){
   extraControlsRight.push(tempElm);
 
   tempElm = Cr.elm('img',{
-    title:"Autoplay",
+    title:"Autoplay Slideshow",
     src:chrome.extension.getURL('img/play.png'),
     width:'28',events:[['mouseup',auto_play],['dragstart',cancelEvent]],
     style:'cursor:pointer;display:none;vertical-align: bottom;',
@@ -676,6 +676,10 @@ function wk(ev){
     if(zoomdIsZoomedIn || imageIsNarrow || zoomedToFit) nav_prev();
   }else if(ev.keyCode==39){//right
     if(zoomdIsZoomedIn || imageIsNarrow || zoomedToFit) nav_next();
+  }else if(ev.keyCode==13){//enter
+    auto_play();
+    mmov();
+    showExtraControlsRight();
   }else if(ev.keyCode==32){//space
     stop_auto_play();
     zoom_in();
@@ -793,7 +797,7 @@ function navToFileIfFastMode(ev){
   navToFileByElmName(ev);
 }
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;overflow-y:scroll;position:relative;"+styles},[],document.body);
+  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;position:relative;"+styles},[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
@@ -811,7 +815,7 @@ function initSingleImageThumbnails(){
       thmhld.style.display='none';
     }
   }else{
-    thmhld=createThumbHld('height:250px;');
+    thmhld=createThumbHld('height:250px;overflow-y:auto;');
     createThumbnailsBrowser(thmhld,navToFileIfFastMode);
     window.addEventListener('scroll', pageScrolled);
     window.addEventListener('resize', pageScrolled);
