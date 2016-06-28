@@ -857,6 +857,7 @@ function isViewingImage_LoadStylesheet(){
 
 function injectStyleSheet(){
   Cr.elm('link',{href:chrome.extension.getURL('localfiles_print.css'),rel:'stylesheet',type:'text/css',media:'print'},[],document.head);
+  Cr.elm('link', {id:'shortcutIcon', rel:"shortcut icon", href:directoryURL+startFileName, type:"image/x-icon"}, [], document.head);
 }
 
 function navToFileByElmName(ev){
@@ -871,6 +872,11 @@ function winLocGoCurrent(){
   window.location=directoryURL+startFileName;
 }
 
+function currentFile(){
+  return dirFiles[dirCurFile].file_name;
+}
+
+var shortcutTimeout = 0;
 function navToSrc(src,suppressPushState,loadedFileName){
 
   //this would be WAY better!  unfortunately:
@@ -948,6 +954,12 @@ function navToSrc(src,suppressPushState,loadedFileName){
     resumeAutoPlay();
     fetchNewDirectoryListing(true); // this will potentially pause auto play again!
     //don't do this every time! slows things down!
+
+    clearTimeout(shortcutTimeout);
+    shortcutTimeout = setTimeout(function(){
+      gel('shortcutIcon').href=src;
+    },100);
+
   }
   newimg.src=src;
 }
