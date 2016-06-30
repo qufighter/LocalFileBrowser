@@ -8,6 +8,8 @@ body{font-family:sans-serif;}
 .noline{text-decoration:none;}
 .labeltxt{width:90px;display:inline-block;}
 input[type=text],select{width:200px;}
+#setup_status{font-size:16px;font-weight: bold;}
+
 </style>
 	<script src="Cr_min.js"></script>
 	<script src="about.js"></script>
@@ -15,16 +17,17 @@ input[type=text],select{width:200px;}
 <body>
 	<h2>Options</h2>
 	<div id="options"></div>
-	<h2>Mandatory Configuration for Local Image Viewer</h2>
-	For local image viewer to work, you must allow it to access local file URLs at <a target="_blank" id="chrome-extensions" href="chrome://extensions/?id=lhlckkgdiojkapplglfeomlkjllphilo">chrome://extensions/</a>
-	<br/><img src="img/help_fileurls.png" width="600" /><br/><br/>
-	
+	<h2 class="setup_help">Mandatory Configuration for Local Image Viewer</h2>
+	<br/>For local image viewer to work, you must allow it to access local file URLs at <a target="_blank" id="chrome-extensions" href="chrome://extensions/?id=lhlckkgdiojkapplglfeomlkjllphilo">chrome://extensions/</a>
+	<div id="setup_status"></div>
+	<a target="_blank" id="setup_help" class="setup_help" href="chrome://extensions/?id=lhlckkgdiojkapplglfeomlkjllphilo"><br/><img src="img/help_fileurls.png" width="600" /><br/><br/></a>
+
 	<h2>Find a saved image file</h2>
 	Once Local Image Viewer has been is enabled, from a folder full of images:
 
 	<br/><img src="img/help_dragin.png" align="middle" style="padding-top:3px;padding-right:5px;float:left;" />
 
-	<br/><br/>Drag image into chrome, or use <span class="key">Ctrl</span> + <span class="key">O</span> and select an image file.
+	<br/><br/>Drag image into chrome, or use <span class="key sys-cmd-key">Ctrl</span> + <span class="key">O</span> and select an image file.
 
 	<br/><br/>You may also set Google Chrome as the default handler for image file types.
 
