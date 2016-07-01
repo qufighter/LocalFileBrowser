@@ -202,7 +202,7 @@ function performRotation(degrees){
 function prepareRotationSave(degrees){
   var http = new XMLHttpRequest();
   http.responseType = 'blob';
-  http.open("GET", directoryURL+encodeURIComponent(dirFiles[dirCurFile].file_name));
+  http.open("GET", directoryURL+encodeURIComponent(currentFile()));
   http.onreadystatechange=function(){
     if (http.readyState == 4) {
       var objUr = URL.createObjectURL(http.response);
@@ -897,10 +897,10 @@ function navToSrc(src,suppressPushState,loadedFileName){
     //fetchNewDirectoryListing(false); // possible that the file was deleted or directory does not match, but since it also might just be an alias, it won't disapear on refresh
     // certain image just will not load, not that the file doesn't exist (it was an alias to an image, not an actual image)
 
-    // if( file == dirFiles[dirCurFile].file_name ){
+    // if( file == currentFile() ){
     //   console.log('removing');
     //   dirFiles.splice(dirCurFile, 1);
-    //   navToFile(dirFiles[dirCurFile].file_name); // if going fwd, this will be the right file
+    //   navToFile(currentFile()); // if going fwd, this will be the right file
     // }
     var props = {width:600,height:400};
     var cvs = Cr.elm('canvas',props);
@@ -1091,16 +1091,16 @@ function nav_prev(ev){
   if(ev && ev.which && ev.which == 3)return;
   dirCurFile--;
   if(dirCurFile < 0)dirCurFile=dirFiles.length-1;
-  if(!isValidFile(dirFiles[dirCurFile].file_name))nav_prev()
-  else navToFile(dirFiles[dirCurFile].file_name);
+  if(!isValidFile(currentFile()))nav_prev()
+  else navToFile(currentFile());
 }
 
 function nav_next(ev){
   if(ev && ev.which && ev.which == 3)return;
   dirCurFile++;
   if(dirCurFile > dirFiles.length-1)dirCurFile=0;
-  if(!isValidFile(dirFiles[dirCurFile].file_name))nav_next()
-  else navToFile(dirFiles[dirCurFile].file_name);
+  if(!isValidFile(currentFile()))nav_next()
+  else navToFile(currentFile());
 }
 
 function getNextFile(cf){
