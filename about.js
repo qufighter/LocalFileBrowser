@@ -6,6 +6,8 @@
 	</div>
 */
 
+var isMac = navigator.userAgent.indexOf('Macintosh') > -1;
+
 /* This is where we set the "first view prefs" defaults */
 var _optionDefaults = {
 	leturlbarbreak:'false',
@@ -64,21 +66,45 @@ function getSortTypeOptions(curVal){
 }
 
 function clickedLink(ev){
-	chrome.tabs.create({
-		url: ev.target.href,
-		active: true
-	}, function(t){})
-}
-
-function showDefaults(){
-	var options = gel('options'), found, opt;
-	for( opt in _optionDefaults ){
-		found = options.querySelector('input#'+opt+',select#'+opt);
-		if( found ) found.value = _optionDefaults[opt];
+	var targ = ev.target;
+	while( targ && targ.nodeName != 'A' ){
+		targ=targ.parentNode;
+	}
+	if( targ ){
+		chrome.tabs.create({
+			url: targ.href,
+			active: true
+		}, function(t){})
 	}
 }
 
+function showDefaults(){
+	if( confirm("If you press OK Default options will be displayed.\n\nOnce viewing default options:\n - Save to restore defaults.\n - Reload the page to cancel.") ){
+		var options = gel('options'), found, opt;
+		for( opt in _optionDefaults ){
+			found = options.querySelector('input#'+opt+',select#'+opt);
+			if( found ) found.value = _optionDefaults[opt];
+		}
+	}
+}
+
+function arrayEach(t, fn){
+	for(i=0,il=t.length;i<t.length;i++){
+		fn(t[i]);
+	}
+}
+
+function hideElement(e){e.style.display='none';}
+
 function begin(){
+
+	if( isMac ){
+		var cmdKeys = document.getElementsByClassName('sys-cmd-key');
+		for( var i=0,l=cmdKeys.length; i<l; i++ ){
+			cmdKeys[i].innerText='\u2318';
+		}
+	}
+
 	chrome.storage.local.get(_optionDefaults,function(stor){
 
 		Cr.elm('div',{class:'label_rows'},[
@@ -108,13 +134,38 @@ function begin(){
 				Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype)),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' save then refresh page or change directory')])
 			]),
-			Cr.elm('input',{type:'button',value:'\uD83D\uDCBE Save',event:['click',saveSettings]}),
-			Cr.elm('input',{type:'button',value:'Show Defaults',event:['click',showDefaults]}),
+			Cr.elm('div',{},[
+				Cr.elm('span',{class:'labeltxt'},[]),
+				Cr.elm('input',{type:'button',value:'Save',event:['click',saveSettings]}),
+				Cr.elm('input',{type:'button',value:'Reset',event:['click',showDefaults]}),
+			]),
 		],gel('options'));
 		
 	});
 
 	document.getElementById('chrome-extensions').addEventListener('click', clickedLink);
+	document.getElementById('setup_help').addEventListener('click', clickedLink);
+
+	chrome.extension.isAllowedFileSchemeAccess(function(isAllowed){
+		chrome.extension.isAllowedIncognitoAccess(function(isAllowedIncognito){
+			var statusDest = document.getElementById('setup_status');
+			if( isAllowed ){
+				arrayEach(document.querySelectorAll('.setup_help'), hideElement);
+				if( isAllowedIncognito ){
+					Cr.elm('div',{style:'color:green;'},[Cr.txt('\u2713 Setup Complete!')], statusDest);
+				}else{
+					Cr.elm('div',{},[
+						Cr.elm('div',{style:'color:green;'},[Cr.txt('\u2713 File Access Setup Complete!.')]),
+						//Cr.elm('div',{style:'color:green;'},[Cr.txt('\u2717 Not allowed incognito.')])
+					], statusDest);
+				}
+			}else{
+				Cr.elm('div',{style:'color:red;'},[Cr.txt('\u2717 Setup Incomplete!')], statusDest);
+			}
+		});
+	});
+
+
 }
 
 document.addEventListener('DOMContentLoaded',begin);
