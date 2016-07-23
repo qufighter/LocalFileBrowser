@@ -4,11 +4,16 @@ var dirCurFile = -1;
 var fastmode=false;
 var cachelisting=true;
 var allowedExt = '.JPG|.GIF|.PNG|.JPEG';
+var allowedExtRegex = null;
 var directorySortType = 'filename';
 
+function updateMatchfileRegex(){
+	allowedExtRegex = new RegExp("("+allowedExt+")$",'gi');
+}
+updateMatchfileRegex();
+
 function isValidFile(f){
-	var rx = new RegExp("("+allowedExt+")$",'gi');
-	return f.match(rx);
+	return f.match(allowedExtRegex);
 }
 
 function goToOrOpenOptions(completedCallback){
@@ -129,6 +134,7 @@ function loadPrefs(cbf){
 		// after saving prefs current directory is cleared forcing cache refresh...  resort need not be applied
 		if( obj.matchfiles && obj.matchfiles.length ){
 			allowedExt = obj.matchfiles;
+			updateMatchfileRegex();
 		}
 		if( obj.sorttype && sorts[obj.sorttype] ){
 			directorySortType = obj.sorttype;

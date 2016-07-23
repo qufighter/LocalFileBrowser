@@ -13,6 +13,7 @@ var singleFileMode = directoryURL.substr(directoryURL.length-1,1)!='/';
 chrome.storage.local.get({matchfiles:false},function(obj){
   if( obj.matchfiles && obj.matchfiles.length ){
     allowedExt = obj.matchfiles;
+    updateMatchfileRegex();
     if( !fileUrlInitComplete && singleFileMode ){
       initFileUrl();
     }
