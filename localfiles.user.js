@@ -102,14 +102,14 @@ function handleImageJustLoaded(ev, zoomedToFitJustSet){
   imageViewResizedHandler();
 }
 function imageIsShrunken(){
-  var im=document.body.getElementsByTagName('img')[0];
+  var im=getCurrentImage();
   if(im){
     return im.naturalWidth > im.clientWidth;
   }
   return false;
 }
 function determineIfZoomedToFit(){
-  var im=document.body.getElementsByTagName('img')[0];
+  var im=getCurrentImage();
   if(im)zoomedToFit=im.naturalWidth != im.clientWidth;
 }
 var imgViewResizedTimeout=0;
@@ -118,7 +118,7 @@ function imageViewResized(){
   imgViewResizedTimeout=setTimeout(imageViewResizedHandler,250);
 }
 function imageViewResizedHandler(ev){
-  var im=document.body.getElementsByTagName('img')[0];
+  var im=getCurrentImage();
   if(im){
     if(im.complete && im.naturalWidth && im.clientHeight){
       imageIsNarrow = im.naturalWidth < window.innerWidth;
@@ -875,6 +875,14 @@ function currentFile(){
   return dirFiles[dirCurFile].file_name;
 }
 
+// function isNotImg(file){
+//   return !file.match(/\.(jpg|jpeg|png|gif|bmp)$/i)
+// }
+
+// function navToVideoSrc(){
+
+// }
+
 var shortcutTimeout = 0;
 function navToSrc(src,suppressPushState,loadedFileName){
 
@@ -882,8 +890,20 @@ function navToSrc(src,suppressPushState,loadedFileName){
   //"A history state object with URL 'http://webifire/' cannot be created in a document with origin 'null'."
   // - we can load the next image without reloading the page - we CANNOT update the URL :/...
 
-  //document.getElementsByTagName('img')[0].src=directoryURL+file;
+  //getCurrentImage().src=directoryURL+file;
   if(typeof(suppressPushState)=='undefined')suppressPushState=false;
+
+  // detect non image
+  // to test if video tag worked
+  // 3 just navToSrc img if video fails to load
+  // img tag may not exist on page - may start on video page?
+  // video.addEventListener('loadeddata', function() {
+  //    // Video is loaded and can be played
+  // }, false);
+  // if( isNotImg(loadedFileName) ){
+  //   navToVideoSrc()
+  // }
+
   var origImg = getCurrentImage();
   var origNextSibl = origImg.nextSibling;
   var newimg = origImg.cloneNode();
