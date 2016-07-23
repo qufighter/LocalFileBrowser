@@ -12,16 +12,16 @@ function isValidFile(f){
 }
 
 function goToOrOpenOptions(completedCallback){
-  var optionsUrl = "about.html"; // typically "options.html"
+  var optionsUrl = chrome.extension.getURL("about.html"); // typically "options.html"
   chrome.tabs.query({
-    url: chrome.extension.getURL(optionsUrl),
+    url: optionsUrl,
     currentWindow: true
   }, function(tabs){
     if( tabs.length > 0 ){
       chrome.tabs.highlight({tabs:[tabs[0].index], windowId:tabs[0].windowId}, completedCallback);
     }else{
       chrome.tabs.create({
-        url: chrome.extension.getURL(optionsUrl),
+        url: optionsUrl,
         active: true
       }, function(t){
         chrome.tabs.highlight({tabs:[t.index]}, completedCallback)
