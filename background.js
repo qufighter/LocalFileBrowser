@@ -1,5 +1,27 @@
 var reqInProg = 0, http, lsnaptabid = 0;
 
+chrome.extension.isAllowedFileSchemeAccess(function(wasAllowedAtBoot){
+  if( !wasAllowedAtBoot ){
+    // until extension is allowed, navigating to image files will open options to indicate how to enable file browser
+    chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
+      if (details.frameId === 0) { /*.tabId .url*/
+        chrome.extension.isAllowedFileSchemeAccess(function(hasAccess){
+          if( !hasAccess) goToOrOpenOptions(function(){});
+        });
+      }
+    },{
+      url: [
+        {urlPrefix: 'file://', pathSuffix: '.png'},
+        {urlPrefix: 'file://', pathSuffix: '.jpg'},
+        {urlPrefix: 'file://', pathSuffix: '.gif'},
+        {urlPrefix: 'file://', pathSuffix: '.PNG'},
+        {urlPrefix: 'file://', pathSuffix: '.JPG'},
+        {urlPrefix: 'file://', pathSuffix: '.GIF'}
+      ]
+    });
+  }
+});
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if(request.respond || request.fetch && !reqInProg){
     var sentStartFileName = request.startFile;

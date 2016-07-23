@@ -116,14 +116,19 @@ function begin(){
 	chrome.storage.local.get(_optionDefaults,function(stor){
 
 		Cr.elm('div',{class:'label_rows'},[
-			Cr.elm('label',{},[
+			Cr.elm('label',{title:'If we match any non image files, we drop out of fast mode, and any sideshow in progress is halted.'},[
 				Cr.elm('input',{type:'checkbox',id:'fastmode',checked:(stor.fastmode=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
 				Cr.txt(' "Fast" Mode'),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' (Less flicker, incorrect URL bar, images only)')])
 			]),
 			Cr.elm('label',{title:'Faster when not using fast mode, first navigating to an image from folder view, or large static folder selected.'+_newline_+'Change directory to update cache, restart chrome or reload extension to clear cache.'},[
 				Cr.elm('input',{type:'checkbox',id:'cachelisting',checked:(stor.cachelisting=='true'?'checked':''),valuebinding:'checked'}),
-				Cr.txt(' Cache current directory list')
+				Cr.txt(' Cache current directory list'),
+				Cr.elm('span',{class:'monohelp'},[
+					Cr.txt(' (faster '),
+					Cr.elm('a',{href:'#note2',class:'noline'},[Cr.txt(' ***')]),
+					Cr.txt(')')
+				]),
 			]),
 //			Cr.elm('label',{id:'opt_leturlbarbreak',style:'margin-left:15px;display:'+(stor.fastmode=='true'?'block':'none')+';',title:'history.pushState does not work on file:// url because the function that determines the origin doesn\'t work on file URLs.'},[
 //				Cr.elm('input',{type:'checkbox',id:'leturlbarbreak',checked:(stor.leturlbarbreak=='true'?'checked':''),valuebinding:'checked'}),
@@ -132,7 +137,12 @@ function begin(){
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Body CSS')]),
 				Cr.elm('input',{type:'text',id:'bodystyle',value:stor.bodystyle,valuebinding:'value'}),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.bodystyle+' or pick a different css color value')])
+				Cr.elm('span',{class:'monohelp'},[
+					Cr.txt(' '+ _optionDefaults.bodystyle+' or pick a different '),
+					Cr.elm('a',{href:'https://developer.mozilla.org/en-US/docs/Web/CSS/color_value',target:'_blank'},[
+						Cr.txt('css color value')
+					])
+				])
 			]),
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[
@@ -175,6 +185,7 @@ function begin(){
 			}else{
 				Cr.elm('div',{style:'color:red;'},[Cr.txt('\u2717 Setup Incomplete!')], statusDest);
 			}
+			document.body.style.opacity="1";
 		});
 	});
 

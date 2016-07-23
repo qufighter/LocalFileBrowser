@@ -11,6 +11,25 @@ function isValidFile(f){
 	return f.match(rx);
 }
 
+function goToOrOpenOptions(completedCallback){
+  var optionsUrl = "about.html"; // typically "options.html"
+  chrome.tabs.query({
+    url: chrome.extension.getURL(optionsUrl),
+    currentWindow: true
+  }, function(tabs){
+    if( tabs.length > 0 ){
+      chrome.tabs.highlight({tabs:[tabs[0].index], windowId:tabs[0].windowId}, completedCallback);
+    }else{
+      chrome.tabs.create({
+        url: chrome.extension.getURL(optionsUrl),
+        active: true
+      }, function(t){
+        chrome.tabs.highlight({tabs:[t.index]}, completedCallback)
+      });
+    }
+  });
+}
+
 function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf){
 	//var resDirName = resp.match(/start\(\"([\/\w]+)\"\);/);
 	//console.log('processFileRows', directoryURL, sentStartFileName, resDirName[1], storeItAll)
