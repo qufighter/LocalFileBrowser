@@ -6,11 +6,13 @@
 	</div>
 */
 
+var _newline_='\u000A';
 var isMac = navigator.userAgent.indexOf('Macintosh') > -1;
 
 /* This is where we set the "first view prefs" defaults */
 var _optionDefaults = {
 	leturlbarbreak:'false',
+	cachelisting:'true',
 	fastmode:'false',
 	bodystyle:'background-color: white;',
 	sorttype:'filename',
@@ -27,10 +29,16 @@ function parseElementValue(elm){
 	if( elm.value ) return elm.value.trim();
 }
 
+function setElementValue(elm, value){
+	if( elm.getAttribute('valuebinding') ) return elm[elm.getAttribute('valuebinding')] = (value == 'false' ? false : value);
+	elm.value = value;
+}
+
 function saveSettings(){
 	chrome.storage.local.set({
 		//leturlbarbreak:parseElementValue(gel('leturlbarbreak')),
 		fastmode:parseElementValue(gel('fastmode')),
+		cachelisting:parseElementValue(gel('cachelisting')),
 		matchfiles:parseElementValue(gel('matchfiles')),
 		sorttype:parseElementValue(gel('sorttype')),
 		bodystyle:parseElementValue(gel('bodystyle')),
@@ -83,7 +91,7 @@ function showDefaults(){
 		var options = gel('options'), found, opt;
 		for( opt in _optionDefaults ){
 			found = options.querySelector('input#'+opt+',select#'+opt);
-			if( found ) found.value = _optionDefaults[opt];
+			if( found ) setElementValue(found, _optionDefaults[opt]);
 		}
 	}
 }
@@ -110,7 +118,12 @@ function begin(){
 		Cr.elm('div',{class:'label_rows'},[
 			Cr.elm('label',{},[
 				Cr.elm('input',{type:'checkbox',id:'fastmode',checked:(stor.fastmode=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
-				Cr.txt(' "Fast" Mode (Less flicker, incorrect URL bar, images only)')
+				Cr.txt(' "Fast" Mode'),
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' (Less flicker, incorrect URL bar, images only)')])
+			]),
+			Cr.elm('label',{title:'Faster when not using fast mode, first navigating to an image from folder view, or large static folder selected.'+_newline_+'Change directory to update cache, restart chrome or reload extension to clear cache.'},[
+				Cr.elm('input',{type:'checkbox',id:'cachelisting',checked:(stor.cachelisting=='true'?'checked':''),valuebinding:'checked'}),
+				Cr.txt(' Cache current directory list')
 			]),
 //			Cr.elm('label',{id:'opt_leturlbarbreak',style:'margin-left:15px;display:'+(stor.fastmode=='true'?'block':'none')+';',title:'history.pushState does not work on file:// url because the function that determines the origin doesn\'t work on file URLs.'},[
 //				Cr.elm('input',{type:'checkbox',id:'leturlbarbreak',checked:(stor.leturlbarbreak=='true'?'checked':''),valuebinding:'checked'}),

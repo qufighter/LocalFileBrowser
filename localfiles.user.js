@@ -751,7 +751,6 @@ function prepareThumbnailsBrowser(){
   Cr.elm('button',{id:'loadThumbsBtn',events:['click',initDirectoryThumbnails]},[Cr.txt('Show Thumbnails...')],document.body)
 }
 
-var fastmode=false;
 function isViewingImage_LoadDirectory(){
   //we could first just get dir_url and determine if cacheIsCurrent...
   chrome.storage.local.get(null,function(obj){

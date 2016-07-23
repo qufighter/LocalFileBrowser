@@ -1,6 +1,8 @@
 var startFileName = ''
 var dirFiles = [];
 var dirCurFile = -1;
+var fastmode=false;
+var cachelisting=true;
 var allowedExt = '.JPG|.GIF|.PNG|.JPEG';
 var directorySortType = 'filename';
 
@@ -48,6 +50,8 @@ function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf)
 		'dir_current':dirCurFile,
 		'dir_cur_name':startFileName,
 	};
+
+	if( storeItAll && !cachelisting) storeItAll = false;
 
 	//console.log('saving directory list for dirCurFile '+ dirCurFile)
 	if( storeItAll ){
@@ -102,7 +106,7 @@ function loadCache(cbf){
 
 function loadPrefs(cbf){
 	/* defaults for pref read */
-	chrome.storage.local.get({fastmode: false, matchfiles:false, sorttype:false},function(obj){
+	chrome.storage.local.get({fastmode: false, matchfiles:false, sorttype:false, cachelisting:'true'},function(obj){
 		// after saving prefs current directory is cleared forcing cache refresh...  resort need not be applied
 		if( obj.matchfiles && obj.matchfiles.length ){
 			allowedExt = obj.matchfiles;
@@ -110,7 +114,8 @@ function loadPrefs(cbf){
 		if( obj.sorttype && sorts[obj.sorttype] ){
 			directorySortType = obj.sorttype;
 		}
-		if(obj.fastmode && obj.fastmode=='true')fastmode=true;
+		fastmode=obj.fastmode=='true';
+		cachelisting = obj.cachelisting=='true';
 		if(typeof(cbf)=='function')cbf(obj);
 	});
 }
