@@ -955,6 +955,7 @@ function navToSrc(src,suppressPushState,loadedFileName){
     fetchNewDirectoryListing(true); // this will potentially pause auto play again!
     //don't do this every time! slows things down!
 
+    document.title=loadedFileName;
     clearTimeout(shortcutTimeout);
     shortcutTimeout = setTimeout(function(){
       gel('shortcutIcon').href=src;
