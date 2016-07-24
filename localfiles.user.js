@@ -705,7 +705,7 @@ function mwheelf(ev){
   if( thmhld ){
     if( ev.wheelDeltaY < 0 ){
       if( thmhld.clientHeight < thmhld.scrollHeight && isWindowScrollYMaxed() ){
-        thmhld.setAttribute('curheight', (thmhld.getAttribute('curheight') - 0) + 50);
+        thmhld.setAttribute('curheight', (thmhld.getAttribute('curheight') - 0) + 200);
       }
     }else{
       if( window.scrollY == 0){
