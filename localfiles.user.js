@@ -122,19 +122,22 @@ function imageViewResized(){
 function imageViewResizedHandler(ev){
   var im=getCurrentImage();
   if(im){
+    var winHeight = window.innerHeight;
+    var winWidth = document.body.clientWidth; // overflowY scrollbars
     if(im.complete && im.naturalWidth && im.clientHeight){
-      imageIsNarrow = im.naturalWidth < window.innerWidth;
-      zoomdIsZoomedIn = imageIsNarrow && im.naturalHeight < window.innerHeight;
+      imageIsNarrow = im.naturalWidth < winWidth;
+      zoomdIsZoomedIn = imageIsNarrow && im.naturalHeight < winHeight;
       if(zoomedToFit){
         var im_ratio=im.naturalWidth/im.naturalHeight;
-        var wn_ratio=window.innerWidth/window.innerHeight;
+        var wn_ratio=winWidth/winHeight;
         if(wn_ratio > im_ratio){
-          im.height = window.innerHeight;
-          im.width = window.innerHeight * im_ratio;
+          im.height = winHeight;
+          im.width = winHeight * im_ratio;
         }else{
-          im.width = window.innerWidth;
-          im.height = window.innerWidth / im_ratio;
+          im.width = winWidth;
+          im.height = winWidth / im_ratio;
         }
+        document.body.style.overflowX = 'hidden';
       }else{
         im.width = im.naturalWidth;
         im.height = im.naturalHeight;
@@ -145,6 +148,7 @@ function imageViewResizedHandler(ev){
             ((ev.clientY/window.innerHeight)*im.offsetHeight)-(window.innerHeight*0.5)
           );
         }
+        document.body.style.overflowX = 'auto';
       }
       if(!hasSizedOnce){
         hasSizedOnce=true;
