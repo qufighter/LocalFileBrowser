@@ -523,7 +523,7 @@ function createExtraControls(){
 }
 
 function visitOptions(){
-  window.open(chrome.extension.getURL("about.html"));
+  chrome.runtime.sendMessage({goToOrOpenOptions:true}, null);
 }
 function mmov(){
   gel('arrowsleft').style.opacity="1",

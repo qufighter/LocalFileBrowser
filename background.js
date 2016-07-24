@@ -70,6 +70,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         chrome.storage.local.set({'fetching':sentDirectoryURL}, function(){});
       }
     });
+  }else if(request.goToOrOpenOptions){
+    goToOrOpenOptions(function(){});
   }else if(request.reloadPrefs){
     loadPrefs(function(){
       chrome.storage.local.set({'dir_url':'','fetching':'0'}, function(){ // Force Cache Refresh
