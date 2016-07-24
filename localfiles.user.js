@@ -645,6 +645,8 @@ var pageScrTimeout=0;
 function pageScrolled(){
   clearTimeout(pageScrTimeout);
   pageScrTimeout=setTimeout(pageScrolledHandler,500);
+  var thmhld=gel('thmhld');
+  if(thmhld)thmhld.style.left=window.scrollX+"px";
 }
 
 function pageScrolledHandler(){
@@ -667,7 +669,7 @@ function navToFileIfFastMode(ev){
 }
 var defaultThumhldHeight = 250;
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"margin:20px 5% 110px 5%;position:relative;"+styles,curheight:defaultThumhldHeight},[],document.body);
+  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;margin:20px 5% 110px 5%;position:relative;"+styles,curheight:defaultThumhldHeight},[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
@@ -694,6 +696,7 @@ function initSingleImageThumbnails(){
   }
   imageViewResizedHandler();
   window.scrollBy(0,95);
+  thmhld.style.left=window.scrollX+"px";
 }
 function mwheelf(ev){
   if( ev.target.nodeName == 'CANVAS' ) return;
