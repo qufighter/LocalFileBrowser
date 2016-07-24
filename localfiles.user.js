@@ -2,6 +2,7 @@ var directoryURL=currentDirectoryUrl();
 var bodyExists=false;
 var timeoutId=0;
 var fileUrlInitComplete = false;
+var errorImage = '';
 var singleFileMode = directoryURL.substr(directoryURL.length-1,1)!='/';
 
 // to toggle bg color:
@@ -179,7 +180,7 @@ function rotate_left(){
 }
 
 function getCurrentImage(){
-  return document.getElementsByTagName('img')[0];
+  return document.querySelector('img,video,audio');
 }
 
 function getCurrentRotation(img){
@@ -913,6 +914,8 @@ function navToSrc(src,suppressPushState,loadedFileName){
   newimg.removeAttribute('height');
   updateThumbnail();
   newimg.onerror=function(ev){
+    errorImage=loadedFileName;
+
     // console.log("Loading Error", ev);
     //fetchNewDirectoryListing(false); // possible that the file was deleted or directory does not match, but since it also might just be an alias, it won't disapear on refresh
     // certain image just will not load, not that the file doesn't exist (it was an alias to an image, not an actual image)
@@ -932,6 +935,12 @@ function navToSrc(src,suppressPushState,loadedFileName){
     ctx.textAlign = "center";
     ctx.fillText("Error Loading", 300, 175);
     ctx.fillText('"'+loadedFileName+'"', 300, 225);
+    if( isorwas_full_screen ){
+      ctx.font = "12px sans-serif";
+      ctx.fillText("Cannot change to non image without leaving fast mode.", 300, 300);
+      ctx.fillText("Cannot leave fast mode when using fullScreenElement.", 300, 320);
+      ctx.fillText("Exit fullscreen and use browser native (f11) fullscreen instead.", 300, 340);
+    }
     newimg.src = cvs.toDataURL();
     resumeAutoPlay();
   };
@@ -992,13 +1001,13 @@ function isFileImage(file){
 function navToFile(file,suppressPushState){
 
   var fastmodeAllowed = fastmode;
-  var viewingImageFile = isFileImage(startFileName);
+  var viewingImageFile = errorImage==startFileName || isFileImage(startFileName)
   var navigatingToImageFile = isFileImage(file);
   if( fastmodeAllowed ){
     fastmodeAllowed = viewingImageFile && navigatingToImageFile;
   }
 
-  if(!fastmodeAllowed && !isorwas_full_screen){
+  if(!fastmodeAllowed && (!isorwas_full_screen || !viewingImageFile)){
     window.location=directoryURL+encodeURIComponent(file);
     return;
   }
