@@ -692,6 +692,7 @@ function initSingleImageThumbnails(){
     thmhld.addEventListener('scroll', pageScrolled);
     window.addEventListener('mousewheel', mwheelf);
   }
+  imageViewResizedHandler();
   window.scrollBy(0,95);
 }
 function mwheelf(ev){
