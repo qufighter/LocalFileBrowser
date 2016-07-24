@@ -659,7 +659,7 @@ function navToFileIfFastMode(ev){
   if( !fastmode && !confirm('fast mode not enabled, you will loose thumbnails, are you sure?') ){
     return;
   }
-  navToFileByElmName(ev);
+  navToFileByElmName(ev, true);
 }
 var defaultThumhldHeight = 250;
 function createThumbHld(styles){
@@ -861,11 +861,15 @@ function injectStyleSheet(){
   Cr.elm('link', {id:'shortcutIcon', rel:"shortcut icon", href:directoryURL+startFileName, type:"image/x-icon"}, [], document.head);
 }
 
-function navToFileByElmName(ev){
+function navToFileByElmName(ev, warnIfNonImage){
   var im=getEventTarget(ev);
   if( singleFileMode ){
     dirCurFile = im.id.replace('cicn_','')-0;
-    navToFile(im.getAttribute('name'), false);
+    var filesName = im.getAttribute('name');
+    var viewingImageFile = errorImage==startFileName || isFileImage(startFileName);
+    var navigatingToImageFile = isFileImage(filesName);
+    if( !warnIfNonImage || (viewingImageFile && navigatingToImageFile) || !fastmode || (fastmode && confirm('must leave fast mode to change between non-image content types, you will loose thumbnails, are you sure?')) )
+      navToFile(filesName, false);
   }else window.location=directoryURL+im.getAttribute('name');
 }
 
@@ -1001,7 +1005,7 @@ function isFileImage(file){
 function navToFile(file,suppressPushState){
 
   var fastmodeAllowed = fastmode;
-  var viewingImageFile = errorImage==startFileName || isFileImage(startFileName)
+  var viewingImageFile = errorImage==startFileName || isFileImage(startFileName);
   var navigatingToImageFile = isFileImage(file);
   if( fastmodeAllowed ){
     fastmodeAllowed = viewingImageFile && navigatingToImageFile;
