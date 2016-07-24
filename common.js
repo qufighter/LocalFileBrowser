@@ -1,9 +1,9 @@
-var startFileName = ''
+var startFileName = ''; // start and current file name
 var dirFiles = [];
 var dirCurFile = -1;
 var fastmode=false;
 var cachelisting=true;
-var allowedExt = '.JPG|.GIF|.PNG|.JPEG';
+var allowedExt = '.JPG|.GIF|.PNG|.JPEG|.BMP';
 var allowedExtRegex = null;
 var directorySortType = 'filename';
 

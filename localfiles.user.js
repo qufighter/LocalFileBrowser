@@ -985,8 +985,20 @@ function navToSrc(src,suppressPushState,loadedFileName){
   newimg.src=src;
 }
 
+function isFileImage(file){
+  return file.match(/\.(jpg|jpeg|gif|png|bmp)$/i) ? true : false;
+}
+
 function navToFile(file,suppressPushState){
-  if(!fastmode && !isorwas_full_screen){
+
+  var fastmodeAllowed = fastmode;
+  var viewingImageFile = isFileImage(startFileName);
+  var navigatingToImageFile = isFileImage(file);
+  if( fastmodeAllowed ){
+    fastmodeAllowed = viewingImageFile && navigatingToImageFile;
+  }
+
+  if(!fastmodeAllowed && !isorwas_full_screen){
     window.location=directoryURL+encodeURIComponent(file);
     return;
   }

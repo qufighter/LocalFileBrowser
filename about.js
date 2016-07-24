@@ -16,7 +16,7 @@ var _optionDefaults = {
 	fastmode:'false',
 	bodystyle:'background-color: white;',
 	sorttype:'filename',
-	matchfiles:'.JPG|.GIF|.PNG|.JPEG'
+	matchfiles:'.JPG|.GIF|.PNG|.JPEG|.BMP'
 };
 
 function gel(l){
