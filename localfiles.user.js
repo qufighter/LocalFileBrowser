@@ -101,7 +101,7 @@ function handleImageJustLoaded(ev, zoomedToFitJustSet){
     zoomedToFit = !zoomedToFit;
   }
 
-  imageViewResizedHandler();
+  imageViewResizedHandler({}, true);
 }
 function imageIsShrunken(){
   var im=getCurrentImage();
@@ -119,10 +119,11 @@ function imageViewResized(){
   clearTimeout(imgViewResizedTimeout);
   imgViewResizedTimeout=setTimeout(imageViewResizedHandler,250);
 }
-function imageViewResizedHandler(ev){
+function imageViewResizedHandler(ev, sizeAgainIfSmallSize){
   var im=getCurrentImage();
   if(im){
     var winHeight = window.innerHeight;
+    var winInnerWidth = window.innerWidth;
     var winWidth = document.body.clientWidth; // overflowY scrollbars
     if(im.complete && im.naturalWidth && im.clientHeight){
       imageIsNarrow = im.naturalWidth < winWidth;
@@ -138,6 +139,9 @@ function imageViewResizedHandler(ev){
           im.height = winWidth / im_ratio;
         }
         document.body.style.overflowX = 'hidden';
+        if( sizeAgainIfSmallSize || (winInnerWidth > winWidth && document.body.scrollHeight <= document.body.clientHeight) ){
+          setTimeout(imageViewResizedHandler, 0);
+        }
       }else{
         im.width = im.naturalWidth;
         im.height = im.naturalHeight;
@@ -1004,6 +1008,7 @@ function navToSrc(src,suppressPushState,loadedFileName){
 
   }
   newimg.src=src;
+  newimg.style.transition="0s linear";
 }
 
 function isFileImage(file){
