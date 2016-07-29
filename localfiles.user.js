@@ -101,7 +101,7 @@ function handleImageJustLoaded(ev, zoomedToFitJustSet){
     zoomedToFit = !zoomedToFit;
   }
 
-  imageViewResizedHandler({}, true);
+  imageViewResizedHandler();
 }
 function imageIsShrunken(){
   var im=getCurrentImage();
@@ -119,12 +119,23 @@ function imageViewResized(){
   clearTimeout(imgViewResizedTimeout);
   imgViewResizedTimeout=setTimeout(imageViewResizedHandler,250);
 }
-function imageViewResizedHandler(ev, sizeAgainIfSmallSize){
+function imageViewResizedAgainHandler(winWidth, winClientWidth){
+  setTimeout(function(){
+    if( ( winWidth > winClientWidth && document.body.scrollHeight > document.body.clientHeight ) ){
+      //console.log('resizing a second time')
+      imageViewResizedHandler({}, true);
+    }
+  }, 0);
+}
+function imageViewResizedHandler(ev, useClientWidth){
   var im=getCurrentImage();
   if(im){
     var winHeight = window.innerHeight;
-    var winInnerWidth = window.innerWidth;
-    var winWidth = document.body.clientWidth; // overflowY scrollbars
+    var winWidth = window.innerWidth;
+    var winClientWidth = document.body.clientWidth; // overflowY scrollbars
+    if( useClientWidth ){
+      winWidth = winClientWidth;
+    }
     if(im.complete && im.naturalWidth && im.clientHeight){
       imageIsNarrow = im.naturalWidth < winWidth;
       zoomdIsZoomedIn = imageIsNarrow && im.naturalHeight < winHeight;
@@ -139,9 +150,7 @@ function imageViewResizedHandler(ev, sizeAgainIfSmallSize){
           im.height = winWidth / im_ratio;
         }
         document.body.style.overflowX = 'hidden';
-        if( sizeAgainIfSmallSize || (winInnerWidth > winWidth && document.body.scrollHeight <= document.body.clientHeight) ){
-          setTimeout(imageViewResizedHandler, 0);
-        }
+        imageViewResizedAgainHandler(winWidth, winClientWidth);
       }else{
         im.width = im.naturalWidth;
         im.height = im.naturalHeight;
