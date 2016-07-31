@@ -150,7 +150,7 @@ function begin(){
 					Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
 				]),
 				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.matchfiles)])
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.matchfiles + ' works like /(.JPG|.PNG)$/gi' )])
 			]),
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
@@ -189,7 +189,7 @@ function begin(){
 		});
 	});
 
-
+	createAndAttachRatings(document.getElementById('ratings-container'));
 }
 
 document.addEventListener('DOMContentLoaded',begin);
