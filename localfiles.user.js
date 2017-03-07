@@ -4,7 +4,7 @@ var timeoutId=0;
 var fileUrlInitComplete = false;
 var errorImage = '';
 var singleFileMode = directoryURL.substr(directoryURL.length-1,1)!='/';
-
+var centerImage = true;
 // to toggle bg color:
 // getComputedStyle(document.body).getPropertyValue('background-color')
 // "rgb(255, 192, 203)"
@@ -31,7 +31,10 @@ if(singleFileMode){
 function getAndSetBodyStyle(){
   chrome.storage.local.get({bodystyle:false},function(obj){
     if(obj.bodystyle && obj.bodystyle.length > 0){
-      document.body.setAttribute('style',document.body.getAttribute('style')+obj.bodystyle);
+      document.body.setAttribute('style','text-align:center;'+(document.body.getAttribute('style')||'')+obj.bodystyle);
+      if( obj.bodystyle.indexOf('text-align') > 0 ){
+        centerImage = false; // user defined centering applied, we will not attempt centering again
+      }
     }
   });
 }
@@ -62,7 +65,7 @@ function initFileUrl(){
 
 function setApplyStyles(){
   if(startFileName != ''){
-    document.body.style.textAlign='center';
+    if( centerImage ) document.body.style.textAlign='center';
     imageViewResizedHandler();
   }
 }
@@ -347,7 +350,7 @@ function attemptCreateNextPrevArrows(){
   }
   arrowsCreated=true;
 
-  document.body.style.textAlign='center';
+  if( centerImage ) document.body.style.textAlign='center';
   determineIfZoomedToFit();
   imageViewResizedHandler();
 
