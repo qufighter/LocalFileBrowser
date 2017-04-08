@@ -12,7 +12,7 @@
       "scripts": ["common.js", "background.js"],
       "persistent": false
    },
-   "browser_action": {
+   "page_action": {
       "default_icon": {
         "19": "img/dim/icon19.png",
         "38": "img/dim/icon38.png"
@@ -49,5 +49,5 @@
    "permissions": [
       "tabs", "webNavigation", "storage", "<all_urls>"
    ],
-   "version": "0.0.0.32"
+   "version": "0.0.0.33"
 }

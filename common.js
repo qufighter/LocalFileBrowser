@@ -101,6 +101,7 @@ function seekCurIndex(){
 	}
 }
 
+var dec_regex = /(\d)+\.{0,1}(\d)*/;
 var sorts = {
 	date_desc: function(a,b){
 		return b.date - a.date;
@@ -113,6 +114,15 @@ var sorts = {
 	},
 	filename_reverse: function(a,b){
 		return -sorts.filename(a,b);
+	},
+	filename_numeric: function(a,b){
+		var a0 = a.file_name.match(dec_regex);
+		var b0 = b.file_name.match(dec_regex);
+		var result = (a0 ? (a0[0] || 0) : 0) - (b0 ? (b0[0] || 0) : 0);
+		return result ;
+	},
+	filename_numeric_reverse: function(a,b){
+		return -sorts.filename_numeric(a,b);
 	},
 	random: function(a,b){
 		return Math.random() < 0.5;

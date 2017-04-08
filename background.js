@@ -47,7 +47,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 chrome.storage.local.set({'fetching':'0'}, function(){});
                 processFileRows(sentDirectoryURL, sentStartFileName, http.responseText, true, function(resultObj){
                   if( request.respond ){
-                    chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){});
+                    chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){
+                      if( resultObj.dir_current > -1 ){
+                        chrome.pageAction.setIcon({
+                          tabId: sender.tab.id,
+                          path: {"19": "img/icon19.png", "38": "img/icon38.png"}
+                        });
+                      }
+                      chrome.pageAction.show(sender.tab.id);
+                    });
                   }
                 });
               }else{

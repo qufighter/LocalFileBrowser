@@ -64,6 +64,8 @@ function getSortTypeOptions(curVal){
 		{type: "filename_reverse", name: "Filename Z-A"},
 		{type: "date_desc", name: "Date Modified From Newest"},
 		{type: "date_asc", name: "Date Modified From Oldest"},
+		{type: "filename_numeric", name: "Filename First Number"},
+		{type: "filename_numeric_reverse", name: "Filename First Number (Reverse)"},
 		{type: "random", name: "Random order"},
 	];
 	var sorts=[];
