@@ -354,7 +354,7 @@ function attemptCreateNextPrevArrows(){
   determineIfZoomedToFit();
   imageViewResizedHandler();
 
-  var showArrows = dirFiles.length > 1;
+  var showArrows = dirFiles.length > 0;
   var leftElm=[],rightElm=[],tempElm;
   if(showArrows){
     leftElm.push(
