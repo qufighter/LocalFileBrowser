@@ -176,6 +176,7 @@ function imageViewResizedHandler(ev, useClientWidth){
           var marginTop = Math.round((window.innerHeight - im.clientHeight) * 0.5);
           im.style.marginTop=marginTop+'px';
           im.style.marginBottom=(window.innerHeight-im.clientHeight-marginTop)+'px';
+          im.style.position = 'relative'; // in case image is absolute position
         }else{
           im.style.marginTop='0px';
           im.style.marginBottom='0px';
@@ -362,7 +363,7 @@ function attemptCreateNextPrevArrows(){
                         id :'previous_file',
                       'src':chrome.extension.getURL('img/arrow_left.png'),
                       width:'77',events:[['mouseup',nav_prev],['dragstart',cancelEvent]],
-                      style:'float:left;cursor:pointer;vertical-align: bottom;'
+                      style:'float:left;position:relative;cursor:pointer;vertical-align: bottom;'
                    }
       )
     );
@@ -371,7 +372,7 @@ function attemptCreateNextPrevArrows(){
     Cr.elm('img',{'title':'View Parent Directory',
                     'src':chrome.extension.getURL('img/arrow_up.png'),
                     width:'77',events:[['click',nav_up]],
-                    style:'cursor:pointer;display:none;vertical-align: bottom;'
+                    style:'cursor:pointer;position:relative;display:none;vertical-align: bottom;'
                  }
     )
   );
@@ -381,7 +382,7 @@ function attemptCreateNextPrevArrows(){
     Cr.elm('img',{'title':'Fullscreen',id:'fs_go',
                     'src':chrome.extension.getURL('img/fillscreen.png'),
                     width:'77',events:[['click',fs_go]],
-                    style:'cursor:pointer;display:none;vertical-align: bottom;'
+                    style:'cursor:pointer;position:relative;display:none;vertical-align: bottom;'
                  }
     )
   );
@@ -391,7 +392,7 @@ function attemptCreateNextPrevArrows(){
     Cr.elm('img',{'title':'Toggle Thumbnails',
                     'src':chrome.extension.getURL('img/thumbs.png'),
                     width:'77',events:[['click',initSingleImageThumbnails]],
-                    style:'cursor:pointer;display:none;vertical-align: bottom;'
+                    style:'cursor:pointer;position:relative;display:none;vertical-align: bottom;'
                  }
     )
   );
@@ -401,7 +402,7 @@ function attemptCreateNextPrevArrows(){
     Cr.elm('img',{'title':'Options',
                     'src':chrome.extension.getURL('img/gear.png'),
                     width:'77',events:[['click',visitOptions]],
-                    style:'cursor:pointer;display:none;vertical-align: bottom;'
+                    style:'cursor:pointer;position:relative;display:none;vertical-align: bottom;'
                  }
     )
   );
@@ -425,7 +426,7 @@ function attemptCreateNextPrevArrows(){
                     value:'Go',
                     title:'Navigate URL bar to current path',
                     events:['click',winLocGoCurrent,true],
-                    style:'position:relative;left:-100px;display:none;'
+                    style:'left:-100px;display:none;'
                    }
     )
   );
@@ -452,7 +453,7 @@ function attemptCreateNextPrevArrows(){
       title: getNextName(dirCurFile),
       src:chrome.extension.getURL('img/arrow_right.png'),
       width:'77',events:[['mouseup',nav_next],['dragstart',cancelEvent]],
-      style:'float:right;cursor:pointer;vertical-align: bottom;',
+      style:'float:right;position:relative;cursor:pointer;vertical-align: bottom;',
       class:'printhidden',
       id:'next_file'
     });
@@ -518,7 +519,7 @@ function createExtraControls(){
     title:"Autoplay Slideshow",
     src:chrome.extension.getURL('img/play.png'),
     width:'28',events:[['mouseup',auto_play],['dragstart',cancelEvent]],
-    style:'cursor:pointer;display:none;vertical-align: bottom;',
+    style:'cursor:pointer;position:relative;display:none;vertical-align: bottom;',
     class:'printhidden',
     id:'ffwd'
   },[],rightFrag);
@@ -528,7 +529,7 @@ function createExtraControls(){
     title:"Rotate Left",
     src:chrome.extension.getURL('img/r_left.png'),
     width:'28',events:[['mouseup',rotate_left],['dragstart',cancelEvent]],
-    style:'cursor:pointer;display:none;vertical-align: bottom;',
+    style:'cursor:pointer;position:relative;display:none;vertical-align: bottom;',
     class:'printhidden',
     id:'edit_mode'
   },[],rightFrag);
@@ -538,7 +539,7 @@ function createExtraControls(){
     title:"Rotate Right",
     src:chrome.extension.getURL('img/r_right.png'),
     width:'28',events:[['mouseup',rotate_right],['dragstart',cancelEvent]],
-    style:'cursor:pointer;display:none;vertical-align: bottom;',
+    style:'cursor:pointer;position:relative;display:none;vertical-align: bottom;',
     class:'printhidden',
     id:'edit_mode'
   },[],rightFrag);
@@ -547,6 +548,7 @@ function createExtraControls(){
   tempElm = Cr.elm('a',{style:'display:none;cursor:pointer;vertical-align: bottom;',class:'printhidden',id:'save'},[
     Cr.elm('img',{
       title:"Save Changes",
+      style:'position:relative;',
       height:'37',
       src:chrome.extension.getURL('img/save.png'),
     })
@@ -556,7 +558,7 @@ function createExtraControls(){
 }
 
 function visitOptions(){
-  chrome.runtime.sendMessage({goToOrOpenOptions:true}, null);
+  chrome.runtime.sendMessage({goToOrOpenOptions:true}, function(){});
 }
 function mmov(){
   gel('arrowsleft').style.opacity="1",
@@ -785,7 +787,20 @@ function updateThumbnail(){
 
 function prepareThumbnailsBrowser(){
   loadPrefs(function(){
-    processFileRows(directoryURL, startFileName, document.body.innerHTML, true, function(){});
+    //console.log('sending all the row data now');
+
+    var retryTimeout = setTimeout(function(){
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange=function(){if(xhr.readyState == 4 && xhr.status == 200){
+        processFileRows(directoryURL, startFileName, xhr.responseText, true, function(){});
+      }};
+      xhr.open('GET', window.location.href, true);
+      xhr.send();
+    }, 0);
+
+    processFileRows(directoryURL, startFileName, document.body.innerHTML, true, function(){clearTimeout(retryTimeout);});
+
+
   });
   Cr.elm('button',{id:'loadThumbsBtn',events:['click',initDirectoryThumbnails]},[Cr.txt('Show Thumbnails...')],document.body)
 }
@@ -825,6 +840,10 @@ function cancelLoad(){
   wasCanceled = true;
 }
 
+function visitDir(){
+  window.location=directoryURL;
+}
+
 function doneLoading(){
   var m = document.getElementById('loading-message');
   if( m ) document.body.removeChild(m);
@@ -841,8 +860,13 @@ function fetchNewDirectoryListing(cacheIsCurrent){
   }
   if(!awaitingDirectoryResponse){
     console.log('transmitting directory list request for Match Files configuration');
-    chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName,respond:true}, null);
-    Cr.elm('div',{id:'loading-message',title:'Local Image Viewer Chrome Extension. Filter May Not Match File. Configure from options.',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[Cr.txt('LOADING DIRECTORY '),Cr.elm('span',{style:'cursor:pointer',event:['click',cancelLoad]},[Cr.txt('Cancel')])],document.body);
+    chrome.runtime.sendMessage({fetch:directoryURL,startFile:startFileName,respond:true}, function(){});
+    Cr.elm('div',{id:'loading-message',title:'Local Image Viewer Chrome Extension. Filter May Not Match File. Configure from options.',style:'text-align:center;color:white;position:absolute;z-index:100;top:0px;padding-top:40px;width:100%;text-shadow:1px 1px 1px black;'},[
+      Cr.txt('LOADING DIRECTORY - '),
+      Cr.elm('span',{style:'cursor:pointer',event:['click',cancelLoad]},[Cr.txt('Cancel')]),
+      Cr.txt(' • '),
+      Cr.elm('span',{style:'cursor:pointer',event:['click',visitDir]},[Cr.txt('Visit Directory (alternate load method, then click back and refresh the page)')])
+    ],document.body);
     cacheRequestCounter=0;
   }
 }

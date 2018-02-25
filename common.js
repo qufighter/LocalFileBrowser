@@ -6,6 +6,7 @@ var cachelisting=true;
 var allowedExt = '.JPG|.GIF|.PNG|.JPEG|.BMP';
 var allowedExtRegex = null;
 var directorySortType = 'filename';
+var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
 
 function updateMatchfileRegex(){
 	allowedExtRegex = new RegExp("("+allowedExt+")$",'gi');
@@ -23,41 +24,91 @@ function goToOrOpenOptions(completedCallback){
     currentWindow: true
   }, function(tabs){
     if( tabs.length > 0 ){
-      chrome.tabs.highlight({tabs:[tabs[0].index], windowId:tabs[0].windowId}, completedCallback);
+      chrome.tabs.update(tabs[0].id,{active:true}, completedCallback)
+      //chrome.tabs.highlight({tabs:[tabs[0].index], windowId:tabs[0].windowId}, completedCallback);
     }else{
       chrome.tabs.create({
         url: optionsUrl,
         active: true
       }, function(t){
-        chrome.tabs.highlight({tabs:[t.index]}, completedCallback)
+        chrome.tabs.update(t.id,{active:true}, completedCallback)
+        // chrome.tabs.highlight({tabs:[t.index]}, completedCallback)
       });
     }
   });
 }
 
+function safeUnescape(val){
+	try{
+		return decodeURIComponent(val);
+	}catch(e){}
+	return unescape(val);
+}
+
+var indexMapChrome = {
+	rowEndIndexMatcher: '");',
+	eachRowSplitterFn: function(row){return JSON.parse('["'+row+'"]')},
+	rowSplitter: 'addRow("',
+	loopStartRow: 1,
+	name: function(rDat){ return rDat[0]; },
+	escapedName: function(rDat){ return rDat[1]; },
+	isDir: function(rDat){ return rDat[2]; },
+	size: function(rDat){ return rDat[3]; },
+	datetime: function(rDat){ return rDat[6]; },
+	timestamp: function(rDat){ return rDat[5]; }
+};
+
+var indexMapFirefox = {
+	rowEndIndexMatcher: false,
+	eachRowSplitterFn: function(row){
+		row = row.replace(/\s$/, '');
+		row = row.replace(/\s/g, '","');
+		return JSON.parse('["'+row+'"]');
+	},
+	rowSplitter: "\n",
+	loopStartRow: 2,
+	name: function(rDat){ return safeUnescape(rDat[1]); },
+	escapedName: function(rDat){ return rDat[1]; },
+	isDir: function(rDat){ return rDat[2]; },
+	size: function(rDat){ return rDat[2]; },
+	datetime: function(rDat){ return rDat[3]; },
+	timestamp: function(rDat){ return new Date(safeUnescape(rDat[3])).getTime(); }
+};
+
 function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf){
+	if(!resp) return;
 	//var resDirName = resp.match(/start\(\"([\/\w]+)\"\);/);
 	//console.log('processFileRows', directoryURL, sentStartFileName, resDirName[1], storeItAll)
 	startFileName = sentStartFileName;
+	var indexMap = indexMapChrome;
+	if( resp.match(/^300: /) ){
+		indexMap = indexMapFirefox;
+	}
 	var newDirFiles=[];
-	var rows=resp.split('addRow("');
+	var rows=resp.split(indexMap.rowSplitter);
 	var f0,f,en,rDat,datetime, date, time, size, timestamp;
-	for(var i=1,l=rows.length;i<l;i++){
+	for(var i=indexMap.loopStartRow,l=rows.length;i<l;i++){
+		if(!rows[i]) continue;
+		if( indexMap.rowEndIndexMatcher ){
+			en=rows[i].indexOf(indexMap.rowEndIndexMatcher);
+			rows[i] = rows[i].substr(0,en)
+		}
 
-		en=rows[i].indexOf('");');
-		rDat = JSON.parse('["'+rows[i].substr(0,en)+'"]')
+		rDat = indexMap.eachRowSplitterFn(''+rows[i]);
+		if( !rDat || !rDat.length )continue;
 
-		f0 = rDat[0];
-		f = rDat[1]; //escaped name
+
+		f0 = indexMap.name(rDat);
+		f = indexMap.escapedName(rDat); //escaped name
 
 		if(f != '..'){
 			if(!isValidFile(f))continue;
 			if(f==startFileName || f0 == startFileName ){ // determineSort function seeks again
 				dirCurFile=newDirFiles.length;
 			}
-			size = rDat[3];
-			datetime = rDat[6];
-			timestamp = rDat[5];
+			size = indexMap.size(rDat);
+			datetime = indexMap.datetime(rDat);
+			timestamp = indexMap.timestamp(rDat) - 0;
 
 			//console.log(f, size,  date, time, timestamp)
 			if( size > 0 ){ // we must skip 0byte images where content scripts do not run!
@@ -67,6 +118,8 @@ function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf)
 	}
 	dirFiles = newDirFiles;
 	determineSort(true);
+
+	//console.log('we got this result', dirFiles);
 
 	var storeObj = {
 		'dir_url':directoryURL,

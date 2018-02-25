@@ -6,7 +6,7 @@ chrome.extension.isAllowedFileSchemeAccess(function(wasAllowedAtBoot){
     chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
       if (details.frameId === 0) { /*.tabId .url*/
         chrome.extension.isAllowedFileSchemeAccess(function(hasAccess){
-          if( !hasAccess) goToOrOpenOptions(function(){});
+          if( !hasAccess && !isFirefox ) goToOrOpenOptions(function(){});
         });
       }
     },{
@@ -39,7 +39,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         http = new XMLHttpRequest();
         http.open("GET", sentDirectoryURL);
         http.onreadystatechange=function(){
-          if (http.readyState == 4) {
+          if (http.readyState == 4 ) {
+            console.log('http status', http.status);
             http.onreadystatechange=null;
             reqInProg=0;
             chrome.storage.local.get({'fetching':'0'}, function(obj){

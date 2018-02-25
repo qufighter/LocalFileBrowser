@@ -8,6 +8,7 @@
 
 var _newline_='\u000A';
 var isMac = navigator.userAgent.indexOf('Macintosh') > -1;
+var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
 
 /* This is where we set the "first view prefs" defaults */
 var _optionDefaults = {
@@ -174,9 +175,9 @@ function begin(){
 	chrome.extension.isAllowedFileSchemeAccess(function(isAllowed){
 		chrome.extension.isAllowedIncognitoAccess(function(isAllowedIncognito){
 			var statusDest = document.getElementById('setup_status');
-			if( isAllowed ){
+			if( isAllowed || isFirefox ){
 				arrayEach(document.querySelectorAll('.setup_help'), hideElement);
-				if( isAllowedIncognito ){
+				if( isAllowedIncognito  ){
 					Cr.elm('div',{style:'color:green;'},[Cr.txt('\u2713 Setup Complete!')], statusDest);
 				}else{
 					Cr.elm('div',{},[
