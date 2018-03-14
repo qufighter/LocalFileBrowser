@@ -9,7 +9,7 @@ var directorySortType = 'filename';
 var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
 
 function updateMatchfileRegex(){
-	allowedExtRegex = new RegExp("("+allowedExt+")$",'gi');
+	allowedExtRegex = new RegExp("("+allowedExt+")$",'i');
 }
 updateMatchfileRegex();
 

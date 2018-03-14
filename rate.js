@@ -4,6 +4,10 @@ var ln_sprt = 'https://chrome.google.com/webstore/detail/local-image-viewer/lhlc
 var ln_rate = 'https://chrome.google.com/webstore/detail/local-image-viewer/lhlckkgdiojkapplglfeomlkjllphilo/reviews';//?hl=en-US&gl=US'
 
 var interactiveMode = false;
+if( isFirefox ){
+	ln_sprt = 'https://addons.mozilla.org/en-US/firefox/addon/local-file-image-viewer/';
+	ln_rate = 'https://addons.mozilla.org/en-US/firefox/addon/local-file-image-viewer/reviews/';
+}
 
 function createRatings(){
 	setTimeout(function(){

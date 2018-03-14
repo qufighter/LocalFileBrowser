@@ -1,6 +1,9 @@
 Chrome Version
 https://chrome.google.com/webstore/detail/local-image-viewer/lhlckkgdiojkapplglfeomlkjllphilo
 
+Firefox Version
+https://addons.mozilla.org/en-US/firefox/addon/local-file-image-viewer/
+
 TESTS:
 
 Tests are largely manual right now and consist of two basic things:

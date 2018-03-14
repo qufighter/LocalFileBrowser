@@ -875,7 +875,7 @@ function recievedDirectoryData(dataObj){
   awaitingDirectoryResponse=false;
   console.log('loaded initial cache from background page...'); // from common.js
   if( !dataObj || !dataObj.dir_cache ){
-    document.getElementById('loading-message').innerHTML="Sorry - error occured please try refreshing the page.";
+    Cr.empty(document.getElementById('loading-message')).appendChild(Cr.txt("Sorry - error occured please try refreshing the page."));
   }else{
     // CAREFUL ! - we can get a response for a directory that is not the current directory
     if( dataObj.dir_url == directoryURL ){

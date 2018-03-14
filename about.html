@@ -13,15 +13,15 @@ input[type=text],select{width:200px;}
 
 </style>
 	<script src="Cr.js"></script>
-	<script src="rate.js"></script>
 	<script src="about.js"></script>
+	<script src="rate.js"></script>
 </head>
 <body>
-	<h2><img src="img/icon32.png" style="vertical-align:middle;" id="logo"> Chrome Local File Viewer Options</h2>
+	<h2><img src="img/icon32.png" style="vertical-align:middle;" id="logo">Local File Viewer Options</h2>
 	<div id="options"></div>
 
 	<h2 class="setup_help">Mandatory Configuration for Local Image Viewer</h2>
-	<br/>For local image viewer to work, you must allow it to access local file URLs at <a target="_blank" id="chrome-extensions" href="chrome://extensions/?id=lhlckkgdiojkapplglfeomlkjllphilo">chrome://extensions/</a>
+	<br/>For local image viewer to work, you must allow it to access local file URLs <span class="chrome-only">at <a target="_blank" id="chrome-extensions" href="chrome://extensions/?id=lhlckkgdiojkapplglfeomlkjllphilo">chrome://extensions/</a></span>
 	<div id="setup_status"></div>
 	<a target="_blank" id="setup_help" class="setup_help" href="chrome://extensions/?id=lhlckkgdiojkapplglfeomlkjllphilo"><br/><img src="img/help_fileurls.png" width="600" /><br/><br/></a>
 
@@ -30,9 +30,9 @@ input[type=text],select{width:200px;}
 
 	<br/><img src="img/help_dragin.png" align="middle" style="padding-top:3px;padding-right:5px;float:left;" />
 
-	<br/><br/>Drag image into chrome, or use <span class="key sys-cmd-key">Ctrl</span> + <span class="key">O</span> and select an image file.
+	<br/><br/>Drag image into browser, or use <span class="key sys-cmd-key">Ctrl</span> + <span class="key">O</span> and select an image file.
 
-	<br/><br/>You may also set Google Chrome as the default handler for image file types.
+	<br/><br/>You may also set your favorite web browser as the default handler for image file types.
 
 	<h2 style="clear:left;padding-top:15px;">Once Configured</h2>
 
@@ -42,9 +42,9 @@ input[type=text],select{width:200px;}
 	<br/><br/>
 	The <span class="key">Enter</span> key begins autoplay aka slideshow mode - which requires fast mode is enabled above.
 	<br/><br/>
-	This allows Google Chrome to operate as a functional replacement for the slow and buggy Windows Photo Viewer
+	This allows your favorite web browser to operate as a functional replacement for the slow and buggy Windows Photo Viewer
 	<br/><br/>
-	<small><a name="note1">**</a> NOTE: only images are fully supported, level of support for other formats may vary greatly.  Make sure chrome supports the format, and even then the next/previous function may not work with every format, especially incompatible with fast mode features.</small>
+	<small><a name="note1">**</a> NOTE: only images are fully supported, level of support for other formats may vary greatly.  Make sure the browser supports the format, and even then the next/previous function may not work with every format, especially incompatible with fast mode features.</small>
 	<br/><br/>
 	<small><a name="note2">***</a> NOTE: one directory at a time, if a directory malfunctions, switch to a different one then switch back.</small>
 	<br/><br/>
@@ -52,10 +52,10 @@ input[type=text],select{width:200px;}
 	<br/><br/>
 	Also Windows Photo Viewer has a chance to crash the computer completely requiring system restart.
 	<br/><br/>-->
-	Now you can use Google Chrome to browse through directories of photos!
+	Now you can use your favorite web browser to browse through directories of photos!
 	<br/><img src="img/help_sample.jpg" width="600" /><br/><br/>
 
-	Rate or share <span id="ratings-container"></span> <br/>Try Local Image File Viewer with <a href="http://amazon.com/s?tag=a2d5nfn4elbes-20&field-keywords=chromecast">Chromecast</a>!
+	Rate or share <span id="ratings-container"></span> <span class="chrome-only"><br/>Try Local Image File Viewer with <a href="http://amazon.com/s?tag=a2d5nfn4elbes-20&field-keywords=chromecast">Chromecast</a>!</span>
 <!--
 	Now it works more like Chrome OS.  Rate or share <a href="https://chrome.google.com/webstore/detail/local-image-viewer/lhlckkgdiojkapplglfeomlkjllphilo">Local Image Viewer</a>
 -->

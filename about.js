@@ -9,6 +9,7 @@
 var _newline_='\u000A';
 var isMac = navigator.userAgent.indexOf('Macintosh') > -1;
 var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
+var isChrome = window.navigator.userAgent.indexOf('Chrome/') > -1;
 
 /* This is where we set the "first view prefs" defaults */
 var _optionDefaults = {
@@ -153,7 +154,7 @@ function begin(){
 					Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
 				]),
 				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.matchfiles + ' works like /(.JPG|.PNG)$/gi' )])
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.matchfiles + ' works like /(.JPG|.PNG)$/i' )])
 			]),
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
@@ -193,6 +194,8 @@ function begin(){
 	});
 
 	createAndAttachRatings(document.getElementById('ratings-container'));
+
+	if(!isChrome)document.querySelectorAll('.chrome-only').forEach(function(e){e.style.display='none'});
 }
 
 document.addEventListener('DOMContentLoaded',begin);
