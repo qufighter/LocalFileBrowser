@@ -29,8 +29,12 @@ if(singleFileMode){
 }
 
 function getAndSetBodyStyle(){
-  chrome.storage.local.get({bodystyle:false},function(obj){
-    if(obj.bodystyle && obj.bodystyle.length > 0){
+  chrome.storage.local.get({bodystyle:false, matchfiles: false},function(obj){
+    if( obj.matchfiles && obj.matchfiles.length ){
+      allowedExt = obj.matchfiles;
+      updateMatchfileRegex();
+    }
+    if( isValidFile(currentDirectoryUrl()) && obj.bodystyle && obj.bodystyle.length > 0){
       document.body.setAttribute('style','text-align:center;'+(document.body.getAttribute('style')||'')+obj.bodystyle);
       if( obj.bodystyle.indexOf('text-align') > 0 ){
         centerImage = false; // user defined centering applied, we will not attempt centering again
