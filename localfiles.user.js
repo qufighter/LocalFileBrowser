@@ -35,7 +35,8 @@ function getAndSetBodyStyle(){
       updateMatchfileRegex();
     }
     if( isValidFile(currentDirectoryUrl()) && obj.bodystyle && obj.bodystyle.length > 0){
-      document.body.setAttribute('style','text-align:center;'+(document.body.getAttribute('style')||'')+obj.bodystyle);
+      var defaultAlignment = ''; // 'text-align:center;';
+      document.body.setAttribute('style',defaultAlignment+(document.body.getAttribute('style')||'')+obj.bodystyle);
       if( obj.bodystyle.indexOf('text-align') > 0 ){
         centerImage = false; // user defined centering applied, we will not attempt centering again
       }
