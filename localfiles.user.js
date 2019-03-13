@@ -1051,7 +1051,7 @@ function navToSrc(src,suppressPushState,loadedFileName){
     newimg.addEventListener('click',zoom_in);
     //now refrsh our copy of the directory listing....
     resumeAutoPlay();
-    fetchNewDirectoryListing(true); // this will potentially pause auto play again!
+    //fetchNewDirectoryListing(true); // this will potentially pause auto play again!
     //don't do this every time! slows things down!
 
     document.title=loadedFileName;
@@ -1083,7 +1083,8 @@ function navToFile(file,suppressPushState){
     return;
   }
   if( singleFileMode ){
-    gel('save').style.display="none";
+    var savebtn = gel('save');
+    if(savebtn)savebtn.style.display="none";
     getCurrentImage().removeAttribute('file-rotation');
   }
   navToSrc(directoryURL+encodeURIComponent(file),suppressPushState,file);
