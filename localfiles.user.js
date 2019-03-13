@@ -132,6 +132,14 @@ function imageViewResizedAgainHandler(winWidth, winClientWidth){
 }
 function imageViewResizedHandler(ev, useClientWidth){
   var im=getCurrentImage();
+  if( window.location.hash.length == 0 ){
+    if( window.location.pathname.match(/htm(l)?$/) ){
+      //return; // #1231
+      /* for this page we definitly do not want to init 
+         for any page where image is not first element probably
+      */
+    }
+  }
   if(im){
     var winHeight = window.innerHeight;
     var winWidth = window.innerWidth;
@@ -200,7 +208,9 @@ function rotate_left(){
 }
 
 function getCurrentImage(){
-  return document.querySelector('img,video,audio');
+  var firstChild = document.body.childNodes[0];
+  var media =  document.querySelector('img,video,audio'); // body > // see also #1231
+  return (firstChild === media) ? media : media;
 }
 
 function getCurrentRotation(img){
