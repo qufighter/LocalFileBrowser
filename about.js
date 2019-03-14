@@ -129,7 +129,7 @@ function begin(){
 				Cr.elm('input',{type:'checkbox',id:'cachelisting',checked:(stor.cachelisting=='true'?'checked':''),valuebinding:'checked'}),
 				Cr.txt(' Cache current directory list'),
 				Cr.elm('span',{class:'monohelp'},[
-					Cr.txt(' (faster '),
+					Cr.txt(' (faster  / actually works'),
 					Cr.elm('a',{href:'#note2',class:'noline'},[Cr.txt(' ***')]),
 					Cr.txt(')')
 				]),

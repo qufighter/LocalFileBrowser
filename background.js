@@ -26,7 +26,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if(request.respond || request.fetch && !reqInProg){
     var sentStartFileName = request.startFile;
     var sentDirectoryURL = request.fetch;
-    chrome.storage.local.get({'fetching':'0'}, function(obja){
+    //console.log('its some bg for ', sentDirectoryURL)
+    chrome.storage.local.get({fetching:'0', dir_url:''}, function(obja){
+      //console.log('got settings:',obja );
+      if( obja.dir_url == sentDirectoryURL ){
+        //console.log('looks like we activated the icon now... we never get here though')
+        chrome.pageAction.setIcon({
+          tabId: sender.tab.id,
+          path: {"19": "img/icon19.png", "38": "img/icon38.png"}
+        });
+      }
+      // last time I checked this code works really good, but today does nothing, which is arguably a good thing
       if( obja.fetching == sentDirectoryURL ){
         // we really should not request again if we already are in progress with correct request, even after page refresh....
         // guess we wait, we are already (supposedly?  fetching that URL, sound like it might be suspect though...., may never complete)

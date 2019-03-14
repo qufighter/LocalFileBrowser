@@ -130,7 +130,7 @@ function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf)
 
 	if( storeItAll && !cachelisting) storeItAll = false;
 
-	//console.log('saving directory list for dirCurFile '+ dirCurFile)
+	//console.log('saving directory list for dirCurFile '+ dirCurFile, storeItAll, storeObj)
 	if( storeItAll ){
 		chrome.storage.local.set(storeObj, function(){
 			cbf(storeObj);

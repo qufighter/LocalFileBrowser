@@ -417,7 +417,7 @@ function attemptCreateNextPrevArrows(){
     Cr.elm('input',{'type':'text',
                     id:'os_path',
                     readonly:'readonly',
-                    title:'Current Image Path',
+                    title:'Current Image Path - if you can\'t copy it here you\'ll have to concatenate it yourself from the URL bar - the # indicates the start of the current file name, the previous string is the launched file name.  Replace the launched file name with the current file name to complete the full URL.  Or you could just click "Go" to the right to fix the URL.  history.pushState({},\'hi\',window.location.href + \'#huh\'); works though so we\'ll fix this really soon (oops was wrong... the "origin" is treated like the full file, not the directory.  I guess you may also have to unescape spaces and () before using the URL too.  Whelp moving on...  Thanks for your patience!',
                     'value':osFormatPath(directoryURL+startFileName),
                     events:['mouseover',selectSelf,true],
                     style:'cursor:text;display:none;width:350px;padding:8px;margin:10px;box-shadow:3px 3px 15px #444;margin-right:100px;direction:rtl;'
@@ -822,7 +822,7 @@ function isViewingImage_LoadDirectory(){
 
     if(obj.fastmode && obj.fastmode=='true')fastmode=true;
 
-    //console.log('comparing current dir:', obj.dir_url, directoryURL)
+    //console.log('comparing current dir:', obj.dir_url, directoryURL, 'all settings', obj);
     cacheIsCurrent = obj.dir_url == directoryURL;
 
     if(cacheIsCurrent){
@@ -870,7 +870,7 @@ function fetchNewDirectoryListing(cacheIsCurrent){
       Cr.txt('LOADING DIRECTORY - '),
       Cr.elm('span',{style:'cursor:pointer',event:['click',cancelLoad]},[Cr.txt('Cancel')]),
       Cr.txt(' • '),
-      Cr.elm('span',{style:'cursor:pointer',event:['click',visitDir]},[Cr.txt('Visit Directory (alternate load method, then click back and refresh the page)')])
+      Cr.elm('span',{style:'cursor:pointer',event:['click',visitDir]},[Cr.txt('Visit Directory (alternate load method (requires option for cache directory to be enabled), then click back and refresh the page)')])
     ],document.body);
     cacheRequestCounter=0;
   }
