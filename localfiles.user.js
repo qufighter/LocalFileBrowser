@@ -176,15 +176,14 @@ function imageViewResizedHandler(ev, useClientWidth){
         im.addEventListener('click',zoom_in);
         im.style.cursor='-webkit-zoom-'+(zoomedToFit?'out':'in');
       }
+      im.style.marginTop='0px';
+      im.style.marginBottom='0px';
       if(im.clientHeight){
         if(im.clientHeight < window.innerHeight){
           var marginTop = Math.round((window.innerHeight - im.clientHeight) * 0.5);
           im.style.marginTop=marginTop+'px';
           im.style.marginBottom=(window.innerHeight-im.clientHeight-marginTop)+'px';
           im.style.position = 'relative'; // in case image is absolute position
-        }else{
-          im.style.marginTop='0px';
-          im.style.marginBottom='0px';
         }
       }
       if( zoomdIsZoomedIn )
