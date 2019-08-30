@@ -174,7 +174,7 @@ function imageViewResizedHandler(ev, useClientWidth){
       if(!hasSizedOnce){
         hasSizedOnce=true;
         im.addEventListener('click',zoom_in);
-        im.style.cursor='-webkit-zoom-'+(zoomedToFit?'out':'in');
+        im.style.cursor='zoom-'+(zoomedToFit?'out':'in');
       }
       im.style.marginTop='0px';
       im.style.marginBottom='0px';
@@ -187,9 +187,9 @@ function imageViewResizedHandler(ev, useClientWidth){
         }
       }
       if( zoomdIsZoomedIn )
-        im.style.cursor=(zoomedToFit?'-webkit-zoom-out':'-webkit-zoom-in');
+        im.style.cursor=(zoomedToFit?'zoom-out':'zoom-in');
       else
-        im.style.cursor=(zoomedToFit?'-webkit-zoom-in':'-webkit-zoom-out');
+        im.style.cursor=(zoomedToFit?'zoom-in':'zoom-out');
     }else{
       im.onload=handleImageJustLoaded;
     }
