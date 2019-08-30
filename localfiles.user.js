@@ -449,7 +449,7 @@ function attemptCreateNextPrevArrows(){
 
   var arrowHolder = document.body; //Cr.elm('div',{id:'arrowHolder',style:'position:relative;'},[],document.body);
 
-  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsLeft],['mouseout',hideExtraControlsLeft]]},leftElm,arrowHolder);
+  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsLeft],['mouseout',hideExtraControlsLeft]]},leftElm,arrowHolder);
 
 
   if(showArrows){
@@ -465,7 +465,7 @@ function attemptCreateNextPrevArrows(){
     window.addEventListener('mousemove', mmov);
   }
 
-  Cr.elm('div',{id:'arrowsright',style:'position:fixed;opacity:0;-webkit-transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsRight],['mouseout',hideExtraControlsRight]]},rightElm,arrowHolder);
+  Cr.elm('div',{id:'arrowsright',style:'position:fixed;opacity:0;transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsRight],['mouseout',hideExtraControlsRight]]},rightElm,arrowHolder);
 
   window.addEventListener('resize', imageViewResized);
   window.addEventListener('keyup',wk);
