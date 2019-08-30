@@ -1101,7 +1101,11 @@ function navigationStateHashChange(ev){
   if( !fname ){
     navToFile(currentStartFileName(),true);
   }else if( startFileName != fname){
-    navToFile(fname,true);
+    // note: this timeout avoids a tab crash on reload in fast mode... at a guess native code is trying to interact with the image in a low level way, while we swap the image out from script, crashing the tab... script should be paused/blocked maybe... however presumably this issue never occurs except when non-chrome script (such as this one) is running....
+    // by the way, timeout zero works too, however it does not prevent flicker... don't hate the flicker since its more transparent about what is going on... this may never be reached if pushState starts to work.
+    setTimeout(function(){
+      navToFile(fname,true);
+    }, 123);
   }
 }
 
