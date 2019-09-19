@@ -705,13 +705,21 @@ function navToFileIfFastMode(ev){
 var defaultThumhldHeight = 250;
 var thumhldBotMargin = 110;
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;margin:20px 5% "+thumhldBotMargin+"px 5%;position:absolute;"+styles,curheight:defaultThumhldHeight},[],document.body);
+  return Cr.elm('div',{
+    id:'thmhld',
+    style:Cr.css(Object.assign({
+      transition:'0s linear',
+      margin:"20px 5% "+thumhldBotMargin+"px 5%",
+      position:'absolute',
+    }, styles)),
+    curheight:defaultThumhldHeight
+  },[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
   window.addEventListener('scroll', pageScrolled);
   window.addEventListener('resize', pageScrolled);
-  createThumbnailsBrowser(createThumbHld(''),navToFileByElmName);
+  createThumbnailsBrowser(createThumbHld({}),navToFileByElmName);
   pageScrolled();
 }
 function initSingleImageThumbnails(){
@@ -723,7 +731,11 @@ function initSingleImageThumbnails(){
       thmhld.style.display='none';
     }
   }else{
-    thmhld=createThumbHld('height:'+defaultThumhldHeight+'px;bottom:-'+(defaultThumhldHeight+thumhldBotMargin)+'px;overflow-y:auto;');
+    thmhld=createThumbHld({
+      height:defaultThumhldHeight+'px',
+      bottom:(-(defaultThumhldHeight+thumhldBotMargin))+'px',
+      'overflow-y':'auto'
+    });
     createThumbnailsBrowser(thmhld,navToFileIfFastMode);
     window.addEventListener('scroll', pageScrolled);
     window.addEventListener('resize', pageScrolled);
