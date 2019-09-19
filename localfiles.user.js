@@ -1066,7 +1066,7 @@ function navToSrc(src,suppressPushState,loadedFileName){
 }
 
 function isFileImage(file){
-  return file.match(/\.(jpg|jpeg|gif|png|bmp)$/i) ? true : false;
+  return file.match(/\.(jpg|jpeg|gif|png|bmp|webp|apng|svg|tif|tiff)$/i) ? true : false;
 }
 
 function navToFile(file,suppressPushState){
