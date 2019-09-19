@@ -703,8 +703,9 @@ function navToFileIfFastMode(ev){
   navToFileByElmName(ev, true);
 }
 var defaultThumhldHeight = 250;
+var thumhldBotMargin = 110;
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;margin:20px 5% 110px 5%;position:relative;"+styles,curheight:defaultThumhldHeight},[],document.body);
+  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;margin:20px 5% "+thumhldBotMargin+"px 5%;position:absolute;"+styles,curheight:defaultThumhldHeight},[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
@@ -722,7 +723,7 @@ function initSingleImageThumbnails(){
       thmhld.style.display='none';
     }
   }else{
-    thmhld=createThumbHld('height:'+defaultThumhldHeight+'px;overflow-y:auto;');
+    thmhld=createThumbHld('height:'+defaultThumhldHeight+'px;bottom:-'+(defaultThumhldHeight+thumhldBotMargin)+'px;overflow-y:auto;');
     createThumbnailsBrowser(thmhld,navToFileIfFastMode);
     window.addEventListener('scroll', pageScrolled);
     window.addEventListener('resize', pageScrolled);
@@ -748,7 +749,9 @@ function mwheelf(ev){
         updateThumbnail();
       }
     }
-    thmhld.style.height = thmhld.getAttribute('curheight')+'px';
+    var curHeight = thmhld.getAttribute('curheight') - 0;
+    thmhld.style.height = curHeight+'px';
+    thmhld.style.bottom = '-'+(curHeight+thumhldBotMargin)+'px';
   }
 }
 function isWindowScrollYMaxed(){
