@@ -702,9 +702,9 @@ function navToFileIfFastMode(ev){
   }
   navToFileByElmName(ev, true);
 }
-var defaultThumhldHeight = 0;
+var defaultThumhldHeight = 250;
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;padding:20px 5% 170px;margin-bottom:110px;position:absolute;bottom:-300px;"+styles,curheight:defaultThumhldHeight},[],document.body);
+  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;padding:20px 5% 170px;margin-bottom:110px;position:relative;"+styles,curheight:defaultThumhldHeight},[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
