@@ -655,14 +655,14 @@ function anImageLoaded(ev){
   var ctx=cvs.getContext('2d');
   var ow=im.naturalWidth,oh=im.naturalHeight;
   //var asp=ow/oh;
-  var srcd=oh;
   if(ow < oh){
     //var nw=75;
     //var nh=(75/ow)*oh;
-    srcd=ow;
+    var srcd=ow;
   }else{//width is greater, use height
     //var nh=75;
     //var nw=(75/oh)*ow;
+    var srcd=oh;
   }
   ctx.drawImage(im,0,0,srcd,srcd,0,0,75,75);
   currentlyLoadingImgs--;
@@ -704,7 +704,7 @@ function navToFileIfFastMode(ev){
 }
 var defaultThumhldHeight = 250;
 function createThumbHld(styles){
-  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;padding:20px 5% 170px;margin-bottom:110px;position:relative;"+styles,curheight:defaultThumhldHeight},[],document.body);
+  return Cr.elm('div',{id:'thmhld',style:"transition:0s linear;margin:20px 5% 110px 5%;position:relative;"+styles,curheight:defaultThumhldHeight},[],document.body);
 }
 function initDirectoryThumbnails(){
   gel('loadThumbsBtn').parentNode.removeChild(gel('loadThumbsBtn'));
@@ -1056,8 +1056,7 @@ function navToSrc(src,suppressPushState,loadedFileName){
     document.title=loadedFileName;
     clearTimeout(shortcutTimeout);
     shortcutTimeout = setTimeout(function(){
-      var shortcut = gel('shortcutIcon');
-      if(shortcut) shortcut.href=src;
+      gel('shortcutIcon').href=src;
     },100);
 
   }
