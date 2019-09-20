@@ -14,7 +14,7 @@ var centerImage = true;
 chrome.storage.local.get({matchfiles:false},function(obj){
   if( obj.matchfiles && obj.matchfiles.length ){
     allowedExt = obj.matchfiles;
-    updateMatchfileRegex();
+    updateMatchfileRegex(true);
     if( !fileUrlInitComplete && singleFileMode ){
       initFileUrl();
     }
@@ -32,7 +32,7 @@ function getAndSetBodyStyle(){
   chrome.storage.local.get({bodystyle:false, matchfiles: false},function(obj){
     if( obj.matchfiles && obj.matchfiles.length ){
       allowedExt = obj.matchfiles;
-      updateMatchfileRegex();
+      updateMatchfileRegex(true);
     }
     if( isValidFile(currentDirectoryUrl()) && obj.bodystyle && obj.bodystyle.length > 0){
       var defaultAlignment = ''; // 'text-align:center;';

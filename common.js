@@ -3,12 +3,26 @@ var dirFiles = [];
 var dirCurFile = -1;
 var fastmode=false;
 var cachelisting=true;
-var allowedExt = '.JPG|.GIF|.PNG|.JPEG|.BMP';
+var defaultAllowedExt = '.JPG|.GIF|.PNG|.JPEG|.BMP|.WEBP|.SVG';
+var allowedExt = defaultAllowedExt;
 var allowedExtRegex = null;
 var directorySortType = 'filename';
+var isMac = navigator.userAgent.indexOf('Macintosh') > -1;
 var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
+var isChrome = window.navigator.userAgent.indexOf('Chrome/') > -1;
 
-function updateMatchfileRegex(){
+function addSupportedExtensions(string){
+	if( string.indexOf(defaultAllowedExt) < 0 ) {
+		if( string.indexOf('.JPG|.GIF|.PNG|.JPEG|.BMP') === 0 ){
+			// the user has old 2019 defaults and has not saved prefs since 9/2019
+			string = string.replace('.JPG|.GIF|.PNG|.JPEG|.BMP', defaultAllowedExt);
+		}
+	}
+	return string;
+}
+
+function updateMatchfileRegex(loadedPrefs){
+	if( loadedPrefs ) allowedExt = addSupportedExtensions(allowedExt);
 	allowedExtRegex = new RegExp("("+allowedExt+")$",'i');
 }
 updateMatchfileRegex();
@@ -197,7 +211,7 @@ function loadPrefs(cbf){
 		// after saving prefs current directory is cleared forcing cache refresh...  resort need not be applied
 		if( obj.matchfiles && obj.matchfiles.length ){
 			allowedExt = obj.matchfiles;
-			updateMatchfileRegex();
+			updateMatchfileRegex(true);
 		}
 		if( obj.sorttype && sorts[obj.sorttype] ){
 			directorySortType = obj.sorttype;

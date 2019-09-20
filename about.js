@@ -7,9 +7,6 @@
 */
 
 var _newline_='\u000A';
-var isMac = navigator.userAgent.indexOf('Macintosh') > -1;
-var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
-var isChrome = window.navigator.userAgent.indexOf('Chrome/') > -1;
 
 /* This is where we set the "first view prefs" defaults */
 var _optionDefaults = {
@@ -18,7 +15,7 @@ var _optionDefaults = {
 	fastmode:'false',
 	bodystyle:'background-color: white;',
 	sorttype:'filename',
-	matchfiles:'.JPG|.GIF|.PNG|.JPEG|.BMP'
+	matchfiles: defaultAllowedExt
 };
 
 function gel(l){
@@ -70,11 +67,11 @@ function getSortTypeOptions(curVal){
 		{type: "filename_numeric_reverse", name: "Filename First Number (Reverse)"},
 		{type: "random", name: "Random order"},
 	];
-	var sorts=[];
+	var rsorts=[];
 	for( var i=0,l=sortTypes.length; i<l; i++ ){
-		sorts.push(Cr.elm('option',{value: sortTypes[i].type, selected: curVal==sortTypes[i].type?'selected':''},[Cr.txt(sortTypes[i].name)]));
+		rsorts.push(Cr.elm('option',{value: sortTypes[i].type, selected: curVal==sortTypes[i].type?'selected':''},[Cr.txt(sortTypes[i].name)]));
 	}
-	return sorts;
+	return rsorts;
 }
 
 function clickedLink(ev){
@@ -118,6 +115,7 @@ function begin(){
 	}
 
 	chrome.storage.local.get(_optionDefaults,function(stor){
+		stor.matchfiles = addSupportedExtensions(stor.matchfiles);
 
 		Cr.elm('div',{class:'label_rows'},[
 			Cr.elm('label',{title:'If we match any non image files, we drop out of fast mode, and any sideshow in progress is halted.'},[
@@ -154,7 +152,7 @@ function begin(){
 					Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
 				]),
 				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' '+ _optionDefaults.matchfiles + ' works like /(.JPG|.PNG)$/i' )])
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(/*' '+ _optionDefaults.matchfiles + */' works like /('+ _optionDefaults.matchfiles +')$/i' )])
 			]),
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
