@@ -481,7 +481,6 @@ function createExtraControls(){
   var rightDest = gel('arrowsright'), tempElm;
   tempElm = Cr.elm('select',{
     title:"Autoplay FPS",
-    value:24,
     id:'fps',
     width:23,
     style:"display:none;vertical-align: bottom;",
@@ -518,6 +517,11 @@ function createExtraControls(){
   ],rightFrag);
   //tempElm.childNodes[3].selected=true;
   extraControlsRight.push(tempElm);
+
+  var fps = tempElm;
+  chrome.storage.local.get({slideshow_fps: 0.5},function(obj){
+    fps.value = obj.slideshow_fps;
+  });
 
   tempElm = Cr.elm('img',{
     title:"Autoplay Slideshow",
@@ -1179,7 +1183,12 @@ function auto_play(ev){
   }else{
     var fps = gel('fps');
     var ffwd = gel("ffwd");
-    var timeout = Math.round(1000 / (fps.value - 0));
+    var ifps = fps.value - 0;
+    if( ifps < 3 ){
+      // will not save super fast FPS values...
+      chrome.storage.local.set({slideshow_fps: ifps}, function(){});
+    }
+    var timeout = Math.round(1000 / ifps);
     ffwd.src=chrome.extension.getURL("img/pause.png");
     autoplayInterval = setInterval(function(){ // todo: compare with setTimeout removeTimeout
       nav_next();
