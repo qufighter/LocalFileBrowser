@@ -22,6 +22,8 @@ chrome.extension.isAllowedFileSchemeAccess(function(wasAllowedAtBoot){
   }
 });
 
+chrome.runtime.onConnect.addListener(port => {});
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if(request.respond || request.fetch && !reqInProg){
     var sentStartFileName = request.startFile;

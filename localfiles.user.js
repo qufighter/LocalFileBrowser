@@ -563,6 +563,11 @@ function createExtraControls(){
   ],rightFrag);
 
   rightDest.appendChild(rightFrag);
+
+  if( isTringToResumeAutoPlay ){
+    isTringToResumeAutoPlay=false;
+    auto_play();
+  }
 }
 
 function visitOptions(){
@@ -828,6 +833,8 @@ function prepareThumbnailsBrowser(){
   Cr.elm('button',{id:'loadThumbsBtn',events:['click',initDirectoryThumbnails]},[Cr.txt('Show Thumbnails...')],document.body)
 }
 
+var isTringToResumeAutoPlay=false;
+var periodicRefreshDesired=false;
 function isViewingImage_LoadDirectory(){
   //we could first just get dir_url and determine if cacheIsCurrent...
   chrome.storage.local.get(null,function(obj){
@@ -842,6 +849,13 @@ function isViewingImage_LoadDirectory(){
 
     //console.log('comparing current dir:', obj.dir_url, directoryURL, 'all settings', obj);
     cacheIsCurrent = obj.dir_url == directoryURL;
+
+    if( obj.alwaysAutoPlay == 'true' ){
+      isTringToResumeAutoPlay = true;
+    }
+    if( obj.periodicallyRefresh == 'true' ){
+      periodicRefreshDesired = true;
+    }
 
     if(cacheIsCurrent){
       var dirCachedFiles=JSON.parse(obj.dir_cache);
@@ -931,6 +945,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse){
   }
   sendResponse({});
 });
+
+chrome.runtime.connect().onDisconnect.addListener(function() {
+  console.log("background page went away! Going to need a page refresh... in 5....")
+  setTimeout(function(){
+    window.location.reload();
+  }, 5000)
+})
 
 function isViewingDirectory_LoadThumbnails(){
   document.addEventListener('DOMContentLoaded', prepareThumbnailsBrowser);
@@ -1069,8 +1090,10 @@ function navToSrc(src,suppressPushState,loadedFileName){
     newimg.addEventListener('click',zoom_in);
     //now refrsh our copy of the directory listing....
     resumeAutoPlay();
-    //fetchNewDirectoryListing(true); // this will potentially pause auto play again!
-    //don't do this every time! slows things down!
+    if( periodicRefreshDesired ){
+      fetchNewDirectoryListing(true); // this will potentially pause auto play again!
+    }
+
 
     document.title=loadedFileName;
     clearTimeout(shortcutTimeout);

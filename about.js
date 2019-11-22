@@ -15,6 +15,8 @@ var _optionDefaults = {
 	fastmode:'false',
 	bodystyle:'background-color: white;',
 	sorttype:'filename',
+	periodicallyRefresh:'false',
+	alwaysAutoPlay:'false',
 	matchfiles: defaultAllowedExt
 };
 
@@ -41,6 +43,8 @@ function saveSettings(){
 		matchfiles:parseElementValue(gel('matchfiles')),
 		sorttype:parseElementValue(gel('sorttype')),
 		bodystyle:parseElementValue(gel('bodystyle')),
+		periodicallyRefresh:parseElementValue(gel('periodicallyRefresh')),
+		alwaysAutoPlay:parseElementValue(gel('alwaysAutoPlay')),
 		fetching:'0'
 	},function(){
 		chrome.runtime.sendMessage({reloadPrefs:true}, function(response){});
@@ -159,7 +163,31 @@ function begin(){
 				Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype)),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' save then refresh page or change directory')])
 			]),
-			Cr.elm('div',{},[
+
+			Cr.elm('strong',{
+				childNodes:[
+					Cr.txt('Kiosk Features'),
+				]
+			}),
+
+			Cr.elm('label',{title:'Useful for Kiosk where files may be added any time, bad for large directories as this pauses the show temporarily.'},[
+				Cr.elm('input',{type:'checkbox',id:'periodicallyRefresh',checked:(stor.periodicallyRefresh=='true'?'checked':''),valuebinding:'checked'}),
+				Cr.txt(' Periodically Refresh Directory'),
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' (every 2-3 times through slideshow)')])
+			]),
+
+			Cr.elm('label',{title:'Useful for Kiosk after extension updates, or in general if you alawys like a slideshow.  Should use your last manually triggered slideshow velocity setting (as long as it was not a super fast one).'},[
+				Cr.elm('input',{type:'checkbox',id:'alwaysAutoPlay',checked:(stor.alwaysAutoPlay=='true'?'checked':''),valuebinding:'checked'}),
+				Cr.txt(' Automatic Slideshow'),
+				Cr.elm('span',{class:'monohelp'},[
+					Cr.txt(' ('),
+					Cr.elm('span',{class:'key'},[Cr.txt(' enter')]),
+					Cr.txt(' slideshow always)')
+
+				])
+			]),
+
+			Cr.elm('div',{style:'padding-top:10px;'},[
 				Cr.elm('span',{class:'labeltxt'},[]),
 				Cr.elm('input',{type:'button',value:'Save',event:['click',saveSettings]}),
 				Cr.elm('input',{type:'button',value:'Reset',event:['click',showDefaults]}),
