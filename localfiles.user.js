@@ -587,8 +587,10 @@ function hid(){
 function wk(ev){
   if(ev.keyCode==37){//left
     if(zoomdIsZoomedIn || imageIsNarrow || zoomedToFit) nav_prev();
+    stop_auto_play();
   }else if(ev.keyCode==39){//right
     if(zoomdIsZoomedIn || imageIsNarrow || zoomedToFit) nav_next();
+    stop_auto_play();
   }else if(ev.keyCode==13){//enter
     auto_play();
     mmov();
@@ -1199,7 +1201,7 @@ function isFullScreen()
 var autoplayInterval = 0;
 function auto_play(ev){
   if(ev && ev.which && ev.which == 3)return;
-  if( autoplayInterval ){
+  if( autoplayInterval || (ev && was_auto_playing_before_paused) ){
     stop_auto_play();
   }else if( !fastmode ){
     alert('fast mode not enabled, cannot autoplay');
@@ -1225,7 +1227,6 @@ function auto_play(ev){
 function pause_auto_play(ev){
   if( autoplayInterval ){
     if(ev && ev.target.id == 'fs_go'){return;} // fullscreen button (at least when going fullscreen) should not stop autoplay
-    window.removeEventListener('click', stop_auto_play);
     var ffwd = gel("ffwd");
     clearInterval(autoplayInterval);
     autoplayInterval = 0;
@@ -1234,6 +1235,7 @@ function pause_auto_play(ev){
 }
 function stop_auto_play(ev){
   pause_auto_play(ev);
+  window.removeEventListener('click', stop_auto_play);
   was_auto_playing_before_paused=false;
 }
 
