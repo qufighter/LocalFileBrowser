@@ -689,6 +689,13 @@ function anImageLoaded(ev){
     ctx.font = "24px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("( ? )", htw, htw+5);
+    if( im.src ){
+      var m = im.src.match(/.(\w+)$/i);
+      if( m && m[1] ){
+        ctx.font = "10px sans-serif";
+        ctx.fillText(m[1].toUpperCase(), htw, htw+20);
+      }
+    }
   }
   currentlyLoadingImgs--;
   if(unloadedImages.length){
