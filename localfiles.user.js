@@ -60,8 +60,10 @@ function initFileUrl(){
     startFileName=dirparts[dirparts.length-1];
     dirparts.splice(dirparts.length-1,1);
     directoryURL=dirparts.join('/')+'/';
-    if( window.location.hash.replace('#','').length ){
+    var hash = window.location.hash.replace('#','');
+    if( hash.length ){
       navigationStateHashChange();
+      startFileName = decodeURIComponent(hash); // see fetch:directoryURL,startFile:startFileName - we want to match the correct file in the list ( dir_current )
     }
     isViewingImage_LoadDirectory();
     isViewingImage_LoadStylesheet();
@@ -675,16 +677,31 @@ function anImageLoaded(ev){
     //var nh=75;
     //var nw=(75/oh)*ow;
   }
-  ctx.drawImage(im,0,0,srcd,srcd,0,0,75,75);
+  var tw = cvs.width - 0;
+  var htw = tw * 0.5;
+  if( ev.type!='error' ){
+    ctx.drawImage(im,0,0,srcd,srcd,0,0,tw,tw);
+  }else{
+    // error loading image>!?
+    ctx.fillStyle = "rgb(0,0,0)";
+    ctx.fillRect(0, 0, tw, tw);
+    ctx.fillStyle = "rgb(255,255,255)";
+    ctx.font = "24px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("( ? )", htw, htw+5);
+  }
   currentlyLoadingImgs--;
   if(unloadedImages.length){
     pageScrolled();
   }
-//drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) //CANVAS
 }
 
 function loadDirFileIdToCvs(dirId){
-  Cr.elm('img',{event:['load',anImageLoaded],id:dirId,src:directoryURL+encodeURIComponent(dirFiles[dirId].file_name)});
+  Cr.elm('img',{
+    events:[['load',anImageLoaded],['error',anImageLoaded]],
+    id:dirId,
+    src:directoryURL+encodeURIComponent(dirFiles[dirId].file_name)
+  });
 }
 
 var pageScrTimeout=0;
@@ -1113,8 +1130,17 @@ function isFileImage(file){
   return file.match(/\.(jpg|jpeg|gif|png|bmp|webp|apng|svg|tif|tiff)$/i) ? true : false;
 }
 
-function navToFile(file,suppressPushState){
+function navFileWhenReady(fname){
+  if( arrowsCreated ){
+    navToFile(fname,true);
+  }else{
+    setTimeout(function(){
+      navFileWhenReady(fname)
+    }, 123);
+  }
+}
 
+function navToFile(file,suppressPushState){
   var fastmodeAllowed = fastmode;
   var viewingImageFile = errorImage==startFileName || isFileImage(startFileName);
   var navigatingToImageFile = isFileImage(file);
@@ -1146,12 +1172,7 @@ function navigationStateHashChange(ev){
   if( !fname ){
     navToFile(currentStartFileName(),true);
   }else if( startFileName != fname){
-    startFileName = fname; // see fetch:directoryURL,startFile:startFileName - we want to match the correct file in the list ( dir_current )
-    // note: this timeout avoids a tab crash on reload in fast mode... at a guess native code is trying to interact with the image in a low level way, while we swap the image out from script, crashing the tab... script should be paused/blocked maybe... however presumably this issue never occurs except when non-chrome script (such as this one) is running....
-    // by the way, timeout zero works too, however it does not prevent flicker... don't hate the flicker since its more transparent about what is going on... this may never be reached if pushState starts to work.
-    setTimeout(function(){
-      navToFile(fname,true);
-    }, 123);
+    navFileWhenReady(fname);
   }
 }
 
