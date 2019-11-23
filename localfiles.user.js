@@ -660,7 +660,7 @@ function isElementInView(elm, thmhld){
 
 var unloadedImages=[];
 var currentlyLoadingImgs=0;
-var maxLoadingImgs=4;
+var maxLoadingImgs=16;
 
 function anImageLoaded(ev){
   var im=getEventTarget(ev);
@@ -689,7 +689,7 @@ function anImageLoaded(ev){
     ctx.font = "24px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("( ? )", htw, htw+5);
-    if( im.src ){
+    if( im && im.src ){
       var m = im.src.match(/.(\w+)$/i);
       if( m && m[1] ){
         ctx.font = "10px sans-serif";
@@ -746,6 +746,7 @@ function createThumbHld(styles){
       transition:'0s linear',
       margin:"20px 5% "+thumhldBotMargin+"px 5%",
       position:'absolute',
+      padding: '4px 0'
     }, styles)),
     curheight:defaultThumhldHeight
   },[],document.body);
@@ -817,22 +818,25 @@ function createThumbnailsBrowser(destination,clFn){
     }
   }
 }
-var SELECTED_THUMBNAIL_BORDER='1px solid red';
 var curThumb = 0;
 function createSingleThumb(fileIndex,destination,clFn){
   var i = fileIndex;
   if(isValidFile(dirFiles[i].file_name)){
-    var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;',events:['click',clFn]},[],destination);
+    var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;position:relative;',events:['click',clFn]},[],destination);//transition:box-shadow ease-out 0.1s;
     unloadedImages.push(fileIndex);
   }
   updateThumbnail();
 }
 function updateThumbnail(){
-  if( curThumb ) curThumb.style.border='';
+  if( curThumb ){
+    curThumb.style.boxShadow='';
+    curThumb.style.zIndex='';
+  }
   curThumb=gel('cicn_'+dirCurFile);
   if( curThumb ){
     var thmhld=gel('thmhld');
-    curThumb.style.border=SELECTED_THUMBNAIL_BORDER;
+    curThumb.style.boxShadow='0px 0px 3px 3px red';
+    curThumb.style.zIndex=1;
     if( !isElementInView(curThumb, thmhld) ){
       thmhld.scrollTop=curThumb.offsetTop;
     }
