@@ -1,3 +1,4 @@
+// This is part of the "Local Image File Viewer" extension
 var startFileName = ''; // start and current file name
 var dirFiles = [];
 var dirCurFile = -1;

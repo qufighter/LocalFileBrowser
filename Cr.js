@@ -1,3 +1,5 @@
+// This file is part of the "Local Image File Viewer" extension
+
 // Cr.elm [create element] by Sam Larison -- Sam @ Vidsbee.com -- Cr.js
 // https://github.com/qufighter/Cr
 var Cr = {

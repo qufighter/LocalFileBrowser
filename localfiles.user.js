@@ -1,3 +1,4 @@
+// This is part of the "Local Image File Viewer" extension
 var directoryURL=currentDirectoryUrl();
 var bodyExists=false;
 var timeoutId=0;
@@ -418,7 +419,7 @@ function attemptCreateNextPrevArrows(){
     Cr.elm('input',{'type':'text',
                     id:'os_path',
                     readonly:'readonly',
-                    title:'Current Image Path - if you can\'t copy it here you\'ll have to concatenate it yourself from the URL bar - the # indicates the start of the current file name, the previous string is the launched file name.  Replace the launched file name with the current file name to complete the full URL.  Or you could just click "Go" to the right to fix the URL.  history.pushState({},\'hi\',window.location.href + \'#huh\'); works though so we\'ll fix this really soon (oops was wrong... the "origin" is treated like the full file, not the directory.  I guess you may also have to unescape spaces and () before using the URL too.  Whelp moving on...  Thanks for your patience!',
+                    title:'Current Image Path - if you can\'t copy it here you\'ll have to concatenate it yourself from the URL bar - the # indicates the start of the current file name, the previous string is the launched file name.  Replace the launched file name with the current file name to complete the full URL.  Or you could just click "Go" to the right to fix the URL. Thanks for your patience!',
                     'value':osFormatPath(directoryURL+startFileName),
                     events:['mouseover',selectSelf,true],
                     style:'cursor:text;display:none;width:350px;padding:8px;margin:10px;box-shadow:3px 3px 15px #444;margin-right:100px;direction:rtl;'
