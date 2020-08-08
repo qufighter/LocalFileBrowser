@@ -1138,6 +1138,8 @@ function navToSrc(src,suppressPushState,loadedFileName){
   newimg.style.transition="0s linear";
 }
 
+// curated based on https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#Supported_image_formats
+// TODO: watch for https://en.wikipedia.org/wiki/High_Efficiency_Image_File_Format https://caniuse.com/#feat=heif
 function isFileImage(file){
   return file.match(/\.(jpg|jpeg|gif|png|bmp|webp|apng|svg|tif|tiff)$/i) ? true : false;
 }
