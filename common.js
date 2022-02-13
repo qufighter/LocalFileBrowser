@@ -193,7 +193,7 @@ var sorts = {
 		return -sorts.filename_numeric(a,b);
 	},
 	random: function(a,b){
-		return Math.random() < 0.5;
+		return Math.random() < 0.5 ? 1 : -1;
 	}
 };
 
