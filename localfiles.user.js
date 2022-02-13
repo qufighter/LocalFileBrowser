@@ -9,8 +9,6 @@ var centerImage = true;
 // to toggle bg color:
 // getComputedStyle(document.body).getPropertyValue('background-color')
 // "rgb(255, 192, 203)"
-// for the reverse, there are some ways
-// http://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes
 
 chrome.storage.local.get({matchfiles:false},function(obj){
   if( obj.matchfiles && obj.matchfiles.length ){
@@ -198,121 +196,6 @@ function imageViewResizedHandler(ev, useClientWidth){
     }
   }
 }
-
-function rotate_right(){
-  performRotation(90);
-}
-
-function rotate_left(){
-  performRotation(-90);
-}
-
-function getCurrentImage(){
-  return document.querySelector('img,video,audio');
-}
-
-function getCurrentRotation(img){
-  return (img.getAttribute('file-rotation') || 0) - 0;
-}
-
-function incrementRotation(deg, amount){
-  return ((deg + amount) + 360 ) % 360;
-}
-
-function performRotation(degrees){
-  var saveBtn = gel('save');
-  saveBtn.href='#';
-  var img = getCurrentImage();
-  // if image changed reset properties (cached image, CurrentRotation
-  var rot = incrementRotation(getCurrentRotation(img), degrees);
-  img.setAttribute('file-rotation', rot);
-  prepareRotationSave(rot);
-}
-
-function prepareRotationSave(degrees){
-  var http = new XMLHttpRequest();
-  http.responseType = 'blob';
-  http.open("GET", directoryURL+encodeURIComponent(currentFile()));
-  http.onreadystatechange=function(){
-    if (http.readyState == 4) {
-      var objUr = URL.createObjectURL(http.response);
-      loadImage(objUr, rotatingImageLoaded, degrees);
-    }
-  }
-  http.send(null);
-}
-
-function rotatingImageLoaded(img, degrees){
-  var ow=img.naturalWidth,oh=img.naturalHeight;
-  var nw=ow, nh=oh;
-  if( degrees % 180 != 0 ) nw=oh, nh=ow;
-  var capCvs = Cr.elm('canvas',{id:'cap-canvas',width:nw,height:nh});
-  var cap_img_ctx=capCvs.getContext('2d');
-  imageRotate(cap_img_ctx, img, degrees, ow, oh);
-  doneCapturingStageForSave(capCvs);
-}
-
-function imageRotate(ctx, img, deg, startW, startH){
-  deg == 90 && ctx.translate(startH,0);
-  deg == 270 && ctx.translate(0,startW);
-  deg == 180 && ctx.translate(startW, startH);
-  ctx.rotate(deg * Math.PI / 180);
-  ctx.drawImage(img,0,0);
-}
-
-function doneCapturingStageForSave(capCvs){
-  var type = null;
-  // working types: http://kangax.github.io/jstests/toDataUrl_mime_type_test/
-  var types = {
-    'png':"image/png",
-    'jpg':"image/jpeg",
-    'jpeg':"image/jpeg"
-  }
-  var saveFileName = startFileName;
-  var ext=saveFileName.match(/\.([A-z]+)$/);
-  if( ext.length == 2 ){
-    ext = ext[1].toLowerCase();
-  }
-  type = types[ext];
-  if( !type ){
-    type = types['png'];
-    saveFileName+='.png';
-  }
-  var datUrl = capCvs.toDataURL(type, 1.0);
-  // check this is the requested type, otherwise add the proper extension
-  // If the requested type is not image/png, but the returned value starts with data:image/png, then the requested type is not supported.
-  var datatype = datUrl.substr(0,6+type.length);
-  if( datatype != 'data:'+type+';'  ){
-    type = types['png'];
-    saveFileName+='.png';
-    if( datatype != 'data:'+type+';' ){
-      datUrl = capCvs.toDataURL(type, 1.0);
-    }
-  }
-
-  navToSrc(datUrl , true, startFileName); // finally render the result - we skip this if CSS is used to insta-preview rotation anyway
-
-  var saveBtn = gel('save');
-  // following 2-3 lines preview what will be saved on the save button (for testing only)
-  // var btnimg = gel('save').querySelector('img');
-  // btnimg.src = datUrl;
-  // btnimg.style.border="1px solid red";
-
-  saveBtn.style.display="inline";
-  saveBtn.download=unescape(saveFileName);
-  var fileBlob = dataUrlToFile(datUrl, type, saveFileName);
-  saveBtn.href = URL.createObjectURL(fileBlob);
-}
-
-function dataUrlToFile(dataUrl, type, saveFileName){
-  var binary = atob(dataUrl.split(',')[1]);
-  var array = [];
-  for(var i = 0; i < binary.length; i++) {
-      array.push(binary.charCodeAt(i));
-  }
-  return new File([new Uint8Array(array)], saveFileName, {type: type});
-}
-
 var extraControlsLeft=[],extraControlsRight=[];
 function showExtraControlsLeft(){
   hideExtraControlsRight();
@@ -571,6 +454,271 @@ function createExtraControls(){
     isTringToResumeAutoPlay=false;
     auto_play();
   }
+}
+
+function rotate_right(){
+  editMode.rotateRight();
+}
+function rotate_left(){
+  editMode.rotateLeft();
+}
+
+var editMode = { // not really edit mode yet
+  snapDest: {x:0,y:0},
+  snapSize: {w:0,h:0},
+  imgSize: {w:0,h:0},
+  attempts: 0,
+  origImg: null,
+  tempCvs: null,
+  capCvs: null,
+  editCvs: null,
+  snapCvs: null,
+  snapCtx: null,
+  created: false,
+  lastBgColor: {r:0,g:0,b:0},
+  imgToTake: [],
+  imgToTakeIdx: 0,
+
+  random255: function(){
+    return Math.round(Math.random()*255);
+  },
+
+  randomBgColor: function(){
+    this.lastBgColor.r = this.random255();
+    this.lastBgColor.g = this.random255();
+    this.lastBgColor.b = this.random255();
+    return "rgb("+this.lastBgColor.r+","+this.lastBgColor.g+","+this.lastBgColor.b+")";
+  },
+
+  getSnapCtx: function(img){
+    var snapw=img.naturalWidth,snaph=img.naturalHeight;
+    if( !this.tempCvs ){
+      this.tempCvs = Cr.elm('canvas',{id:'cap-canvas',width:snapw,height:snaph});
+    }else{
+      this.tempCvs.width=snapw;
+      this.tempCvs.height=snaph;
+    }
+    var ctx = this.tempCvs.getContext('2d');
+    ctx.drawImage(img,0,0);
+    return ctx;
+  },
+
+  generateImagesToTakeGiven: function(width,height){ // current window size!!!
+    var availh=document.body.clientHeight-25
+    var availw=document.body.clientWidth-25  // TODO  -this MUST be width of scroll bars plus whatever border width we choose (1 or 2 px);
+    var hr = Math.ceil(height / availh);
+    var wr = Math.ceil(width / availw);
+    this.imgToTake=[];
+    this.imgToTakeIdx=0;
+    var hRemaining = height;
+    for(var sy=0; sy<hr; sy++){
+      var wRemaining = width;
+      for(var sx=0; sx<wr; sx++){
+        this.imgToTake.push({
+          x:sx*availw,
+          y:sy*availh,
+          w:(wRemaining>availw?availw:wRemaining),
+          h:(hRemaining>availh?availh:hRemaining),
+        })
+        wRemaining-=availw;
+      }
+      hRemaining-=availh;
+    }
+  },
+
+  create: function(){ // aka startRotation
+    this.attempts=0;
+
+    gel('arrowsleft').style.display="none",
+    gel('arrowsright').style.display="none";
+
+    var img = document.getElementsByTagName('img')[0];
+    var ow=img.naturalWidth,oh=img.naturalHeight;
+
+    this.imgSize.w=ow, this.imgSize.h=oh; // imgSize is new size
+
+//TODO perist these and just resize as needed: see getSnapCtx
+// TODO for one thing, these are already sized in anticipation of a rotaton occuring.... should happen dynamically
+    this.capCvs = Cr.elm('canvas',{id:'cap-canvas',width:this.imgSize.h,height:this.imgSize.w});
+    this.editCvs = Cr.elm('canvas',{id:'src-canvas',width:this.imgSize.h,height:this.imgSize.w}); // important - if we reuse this, to reset the transform!!!
+    this.snapCvs = Cr.elm('canvas',{id:'edit-mode-canvas',width:document.body.clientWidth,height:document.body.clientHeight,style:'position:absolute;top:0px;left:0px;cursor:wait;',title:'Sorry: you must wait for the operation to be captured.  Feel free to look away.  Click to cancel.',event:['click',this.cancel.bind(this)]}); // could make it position absolute only before capture
+// TODO - do not create until needed and size then, so size can be applied more logically as w,h
+// this.tempCvs - take an arbitrary image and store it in memory for pixel analysis
+// this.capCvs - the final capture to be rendered/saved - accumulated over several snaps
+// this.editCvs - original source image - rotated / edited as needed (already) -  we page through this during stageImageToTake
+// this.snapCvs - this is the visible image we snap pictures of during export
+
+    this.origImg = img;
+    this.created = true;
+    console.log('create conflict?')
+    this.origImg.style.visibility='hidden';
+
+  },
+
+  exportResult: function(){
+    this.snapCtx = this.snapCvs.getContext('2d');
+    this.origImg.parentNode.insertBefore(this.snapCvs,this.origImg);
+
+    // normally, we might just grab the canvas here
+    // Uncaught SecurityError: Failed to execute 'toDataURL' on 'HTMLCanvasElement': Tainted canvases may not be exported.
+    //var datUrl = this.editCvs.toDataURL();
+    //navToSrc(datUrl , true, startFileName); // finally render the result
+    // TODO ^ try catch this - since if it works, its truly the best to just export the rotated canvas right away! (preserves transparency, etc) and might work sometimes :D
+    // TODO ^ navToSrc should be performed by a function that can be shared
+
+    this.generateImagesToTakeGiven(this.imgSize.w,this.imgSize.h);
+    this.stageImageToTake();
+
+    chrome.runtime.sendMessage({captureImageModification:1}, null);
+  },
+
+  rotateRight: function(){
+    this.create();
+    var source_img_ctx=this.editCvs.getContext('2d');
+    this.rotate(source_img_ctx, this.origImg, 90, this.imgSize.w ,this.imgSize.h);
+    this.exportResult();
+  },
+
+  rotateLeft: function(){
+    this.create();
+    var source_img_ctx=this.editCvs.getContext('2d');
+    this.rotate(source_img_ctx, this.origImg, -90, this.imgSize.w ,this.imgSize.h);
+    this.exportResult();
+  },
+
+  rotate: function(ctx, img, deg, startW, startH){
+    deg == 90 && ctx.translate(startH,0);
+    deg == -90 && ctx.translate(0,startW);
+    this.imgSize.w = startH;
+    this.imgSize.h = startW;
+    ctx.rotate(deg * Math.PI / 180);
+    ctx.drawImage(img,0,0);
+  },
+
+  stageImageToTake: function(){
+    var snapProps = this.imgToTake[this.imgToTakeIdx];
+    if( !snapProps ) return true; // done
+    this.snapCtx.fillStyle = this.randomBgColor(); // TODO: we will probably clear to transparent color here (the entire cvs)
+    // TODO we will probably store the expected TLC of the image (top left corner) instead of simply expecting !bg color
+    // though it will be quite tricky to preserve transparency in this stage/snap/collect mode - unless we can access transparency data from original image directly
+    this.snapCtx.fillRect(0, 0, this.imgSize.w+2, this.imgSize.h+2);  // TODO: this +2+2 and 1,1 are really this.border(padding) or something like it, also used below
+    this.snapCtx.drawImage(this.editCvs,snapProps.x,snapProps.y,snapProps.w,snapProps.h, 1,1, snapProps.w,snapProps.h);
+    return false; // not done
+  },
+
+  captureSnappedImage: function(ctx, img){
+    var snapProps = this.imgToTake[this.imgToTakeIdx], border = 1;
+    ctx.drawImage(img, border, border, snapProps.w, snapProps.h, snapProps.x, snapProps.y, snapProps.w, snapProps.h );
+  },
+
+  colorAtPosition: function(ctx, x, y){
+    var data = ctx.getImageData(x, y, 1, 1).data;
+    return {r:data[0],g:data[1],b:data[2]};
+  },
+
+  confirmExpectedSnap: function(img){ // return true to always capture even if unexpected
+    var snapCtx = this.getSnapCtx(img);
+    var c = this.colorAtPosition(snapCtx, 0, 0);
+    var cx = this.colorAtPosition(snapCtx, 1, 0);
+    var cy = this.colorAtPosition(snapCtx, 0, 1);
+    var c1 = this.colorAtPosition(snapCtx, 1, 1); // if image is transparent in corner... this will mean it cannot be rotated, which is ok for now
+    return c.r == this.lastBgColor.r && c.g == this.lastBgColor.g && c.b == this.lastBgColor.b
+        && cx.r == this.lastBgColor.r && cx.g == this.lastBgColor.g && cx.b == this.lastBgColor.b
+        && cy.r == this.lastBgColor.r && cy.g == this.lastBgColor.g && cy.b == this.lastBgColor.b
+        && c1.r != this.lastBgColor.r && c1.g != this.lastBgColor.g && c1.b != this.lastBgColor.b; // transparent images, if rotated in this mode, loose transparency
+  },
+
+  snapLoaded: function(dataUrl){
+    if( !this.created ) return;
+    var ctx = this.capCvs.getContext('2d');
+    var img = Cr.elm('img',{src:dataUrl, event:['load', function(){
+      var done = false;
+
+      if( this.confirmExpectedSnap(img) ){ // looks good
+        this.captureSnappedImage(ctx,img);
+        this.imgToTakeIdx++;
+        done = this.stageImageToTake();
+      }else{
+        ++this.attempts; // failed attempt
+        done = this.stageImageToTake();
+        console.log('retrying...')
+      }
+
+      if(!done){
+        if( this.attempts < 20 ){
+          console.log('capturing tab to reconstruct image...');
+          window.scrollTo(0, 0);
+          setTimeout(function(){
+            chrome.runtime.sendMessage({captureImageModification:1}, null);
+          }, 220);
+        }else{
+          console.warn('giving up on capturing result.... unexpected format encountered.');
+          this.exitEditor();
+        }
+
+      }else{
+        var type = null;
+        // working types: http://kangax.github.io/jstests/toDataUrl_mime_type_test/
+        var types = {
+          'png':"image/png",
+          'jpg':"image/jpeg",
+          'jpeg':"image/jpeg"
+        }
+        var saveFileName = startFileName;
+        var ext=saveFileName.match(/\.([A-z]+)$/);
+        if( ext.length == 2 ){
+          ext = ext[1].toLowerCase();
+        }
+        type = types[ext];
+        if( !type ){
+          type = types['png'];
+          saveFileName+='.png';
+        }
+        var datUrl = this.capCvs.toDataURL(type, 1.0); // TODO: support jpg quality other than 100?
+        // TODO: check this is the requested type, otherwise add the proper extension
+        // If the requested type is not image/png, but the returned value starts with data:image/png, then the requested type is not supported.
+        navToSrc(datUrl , true, startFileName); // finally render the result
+        var saveBtn = gel('save');
+        saveBtn.style.display="inline";
+        saveBtn.download=unescape(saveFileName);
+        var fileBlob = this.dataUrlToFile(datUrl, type, saveFileName);
+        saveBtn.href = URL.createObjectURL(fileBlob);
+        this.exitEditor();
+      }
+
+    }.bind(this)]});
+  },
+
+  dataUrlToBlob: function(dataUrl, type){
+    var binary = atob(dataUrl.split(',')[1]);
+    var array = [];
+    for(var i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+    }
+    return new Blob([new Uint8Array(array)], {type: type});
+  },
+  dataUrlToFile: function(dataUrl, type, saveFileName){
+    var binary = atob(dataUrl.split(',')[1]);
+    var array = [];
+    for(var i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+    }
+    return new File([new Uint8Array(array)], saveFileName, {type: type});
+  },
+  cancel:function(){
+    this.exitEditor();
+  },
+  exitEditor: function(){
+    getCurrentImage().style.visibility='visible';
+    setTimeout(function(){
+      getCurrentImage().style.visibility='visible';
+    },100)
+    this.snapCvs.parentNode.removeChild(this.snapCvs);
+    gel('arrowsleft').style.display="block";
+    gel('arrowsright').style.display="block";
+    this.created=false;
+  },
+
 }
 
 function visitOptions(){
@@ -1025,6 +1173,10 @@ function currentFile(){
 
 // }
 
+function getCurrentImage(){
+  return document.getElementsByTagName('img')[0];
+}
+
 var shortcutTimeout = 0;
 function navToSrc(src,suppressPushState,loadedFileName){
 
@@ -1191,16 +1343,9 @@ function navigationStateHashChange(ev){
 }
 
 function preLoadFile(file){
-  loadImage(directoryURL+encodeURIComponent(file), function(){console.log('preloaded_next'+directoryURL+file)});
-}
-
-function loadImage(url, cbf){
-  var extraArgs = arguments.length > 2 ? Array.prototype.slice.call(arguments).slice(2) : [];
   var im=new Image();
-  im.onload=function(){
-    cbf.apply(this, [im].concat(extraArgs))
-  }
-  im.src=url;
+  im.onload=function(){console.log('preloaded_next'+directoryURL+file)}
+  im.src=directoryURL+encodeURIComponent(file);
 }
 
 function nav_up(){
