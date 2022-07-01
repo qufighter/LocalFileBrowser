@@ -1,3 +1,5 @@
+import {loadPrefs, goToOrOpenOptions, processFileRows} from "./common_f_stupid_export_statement_useless_token.js";
+
 var reqInProg = 0, http, lsnaptabid = 0;
 
 chrome.extension.isAllowedFileSchemeAccess(function(wasAllowedAtBoot){
@@ -38,7 +40,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       //console.log('got settings:',obja );
       if( obja.dir_url == sentDirectoryURL ){
         //console.log('looks like we activated the icon now... we never get here though')
-        chrome.pageAction.setIcon({
+        chrome.action.setIcon({
           tabId: sender.tab.id,
           path: {"19": "img/icon19.png", "38": "img/icon38.png"}
         });
@@ -53,45 +55,44 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // as we do if we do nothing here
         console.log('received request for '+sentDirectoryURL+' believed to already be in progress, ignored.');
       }else{
-        http = new XMLHttpRequest();
-        http.open("GET", sentDirectoryURL);
-        http.onreadystatechange=function(){
-          if (http.readyState == 4 ) {
-            console.log('http status', http.status);
-            http.onreadystatechange=null;
-            reqInProg=0;
-            chrome.storage.local.get({'fetching':'0'}, function(obj){
-              if( obj.fetching == sentDirectoryURL ){
-                chrome.storage.local.set({'fetching':'0'}, function(){});
-                processFileRows(sentDirectoryURL, sentStartFileName, http.responseText, true, function(resultObj){
-                  if( request.respond ){
-                    chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){
-                      if( resultObj.dir_current > -1 ){
-                        chrome.pageAction.setIcon({
-                          tabId: sender.tab.id,
-                          path: {"19": "img/icon19.png", "38": "img/icon38.png"}
-                        });
-                      }
-                      chrome.pageAction.show(sender.tab.id);
-                    });
-                  }
-                });
-              }else{
-                // this is not workign well for multiple simultaneous requests since one arbatrary one of them is always prioritized
-                // processFileRows(sentDirectoryURL, sentStartFileName, http.responseText, false, function(resultObj){
-                //   if( request.respond ){
-                //     chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){});
-                //   }
-                // });
-                // some observed issues:
-                //   1) 2 windows open looking at files, one looking at directory, somehow reloadPrefs is triggered and a LOT more requests created (possibly resolved)
-                //   2) one of the direcotries will stop owrking, and start browing the other one, need to inspect further what gets returned
-                console.log('loaded a directory list that is not current');//, we processed teh rows and returned them but did not store them.');
-              }
-            });
-          }
-        };
-        http.send(null);
+          
+        fetch(sentDirectoryURL)
+          .then(function(response){return response.text()})
+          .then(function(responseText){
+              
+              reqInProg=0;
+              chrome.storage.local.get({'fetching':'0'}, function(obj){
+                if( obj.fetching == sentDirectoryURL ){
+                  chrome.storage.local.set({'fetching':'0'}, function(){});
+                  processFileRows(sentDirectoryURL, sentStartFileName, responseText, true, function(resultObj){
+                    if( request.respond ){
+                      chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){
+                        if( resultObj.dir_current > -1 ){
+                          chrome.action.setIcon({
+                            tabId: sender.tab.id,
+                            path: {"19": "img/icon19.png", "38": "img/icon38.png"}
+                          });
+                        }
+                        //chrome.action.show(sender.tab.id);
+                      });
+                    }
+                  });
+                }else{
+                  // this is not workign well for multiple simultaneous requests since one arbatrary one of them is always prioritized
+                  // processFileRows(sentDirectoryURL, sentStartFileName, responseText, false, function(resultObj){
+                  //   if( request.respond ){
+                  //     chrome.tabs.sendMessage(sender.tab.id, resultObj, function(){});
+                  //   }
+                  // });
+                  // some observed issues:
+                  //   1) 2 windows open looking at files, one looking at directory, somehow reloadPrefs is triggered and a LOT more requests created (possibly resolved)
+                  //   2) one of the direcotries will stop owrking, and start browing the other one, need to inspect further what gets returned
+                  console.log('loaded a directory list that is not current');//, we processed teh rows and returned them but did not store them.');
+                }
+              });
+          })
+          
+          
         reqInProg=1;
         chrome.storage.local.set({'fetching':sentDirectoryURL}, function(){});
       }

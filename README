@@ -11,3 +11,17 @@ Tests are largely manual right now and consist of two basic things:
 browsing directories with different types of filename formats and special charaters, links/aliases, at different sorts
 
 browsing directories with an extremely large number of images from slow drives - and avoiding lag while doing so
+
+# Permissions Justifications
+
+ * rotation feature requiers captureVisibleTab from BG page, which unfrotunately requiers "host_permissions": ["<all_urls>"]
+   * if captureVisibleTab would work from here with file:///* permissions then that would be the restricted set I need
+   * moving this feature to the popup would be awkward...
+   * the other rotate work around I had going stopped working... this is reliable at least... if not annoying.
+   
+ *
+
+# Just pretending this works (manifest v3)
+
+ * web_accessible_resources (reminder: file is not a web)
+ * sharing files with module and content scripts

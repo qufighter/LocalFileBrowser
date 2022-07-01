@@ -1,5 +1,5 @@
 {
-   "manifest_version": 2,
+   "manifest_version": 3,
    "description": "Next and previous buttons for viewing images in local file URLs to browse folders",
    "name": "Local Image File Viewer",
    "content_scripts": [ {
@@ -9,10 +9,10 @@
    }],
    "options_page": "about.html",
    "background": {
-      "scripts": ["common.js", "background.js"],
-      "persistent": false
+      "service_worker": "background.js",
+      "type": "module"
    },
-   "page_action": {
+   "action": {
       "default_icon": {
         "19": "img/dim/icon19.png",
         "38": "img/dim/icon38.png"
@@ -27,27 +27,19 @@
        "64": "img/icon64.png",
       "128": "img/icon128.png"
    },
-   "web_accessible_resources": [
-     "localfiles_print.css",
-     "img/arrow_left.png",
-     "img/arrow_right.png",
-     "img/arrow_up.png",
-     "img/zoom_in.png",
-     "img/zoom_out.png",
-     "img/play.png",
-     "img/pause.png",
-     "img/ffwd.png",
-     "img/r_right.png",
-     "img/r_left.png",
-     "img/save.png",
-     "img/edit.png",
-     "img/fillscreen.png",
-     "img/gear.png",
-     "img/thumbs.png",
-     "about.html"
-   ],
+   "web_accessible_resources": [{
+      "resources": [
+         "localfiles_print.css",
+         "img/*.png",
+         "about.html"
+      ],
+      "matches":[ "file:///*" ]
+   }],
    "permissions": [
-      "tabs", "webNavigation", "storage", "<all_urls>"
+      "activeTab", "tabs", "webNavigation", "storage"
    ],
-   "version": "0.0.0.42"
+   "host_permissions": [
+       "<all_urls>"
+   ],
+   "version": "0.0.1.0"
 }

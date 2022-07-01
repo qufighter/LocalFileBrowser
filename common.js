@@ -9,9 +9,12 @@ var allowedExt = defaultAllowedExt;
 var allowedExtRegex = null;
 var directorySortType = 'filename';
 var isMac = navigator.userAgent.indexOf('Macintosh') > -1;
-var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
-var isChrome = window.navigator.userAgent.indexOf('Chrome/') > -1;
-
+var isFirefox = false;
+var isChrome = true;
+if( typeof(window) != 'undefined' ){ // for bg page code share nightmare
+    var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
+    var isChrome = window.navigator.userAgent.indexOf('Chrome/') > -1;
+}
 function addSupportedExtensions(string){
 	if( string.indexOf(defaultAllowedExt) < 0 ) {
 		if( string.indexOf('.JPG|.GIF|.PNG|.JPEG|.BMP') === 0 ){
@@ -33,7 +36,7 @@ function isValidFile(f){
 }
 
 function goToOrOpenOptions(completedCallback){
-  var optionsUrl = chrome.extension.getURL("about.html"); // typically "options.html"
+  var optionsUrl = chrome.runtime.getURL("about.html"); // typically "options.html"
   chrome.tabs.query({
     url: optionsUrl,
     currentWindow: true
