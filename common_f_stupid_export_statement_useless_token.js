@@ -235,7 +235,7 @@ function loadPrefs(cbf){
 // typeof(export) == "undefined" friends... wtf is wrong with this picture...  export = export || {} // SOMEHTING should make this code not explode... idiots... it should do a thing or nothing ( like whitespace ) as it's a token.
 // if my cs has to be a modlue now, to simplly share some code, at least support that sh*t? or one of the sensible patches?
 // no way in hell would I turn this project into some sort of njs built dependency vulnerability hell that seesm to be "the only way to develop" thanks google?  Can't we someday realize the future sucks?  People literally fight dependency hell and pretend they're writing code.
-export { loadPrefs, goToOrOpenOptions, processFileRows }
+export { loadPrefs:loadPrefs, goToOrOpenOptions:goToOrOpenOptions, processFileRows:processFileRows }
 // you can't try/catch this thing out of here since it has to be at the top level of code
 // if it IS at the top and you're not in a module, it's unexpected and BREAKS your globally scoped code above.... for pure inconvenience.
 // thanks lets waste everones time on earth patching and maintinign crap tht whould jsut work... gee thanks?  ****
