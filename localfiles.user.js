@@ -1160,7 +1160,9 @@ function isViewingImage_LoadStylesheet(){
 }
 
 function injectStyleSheet(){
-  Cr.elm('link',{href:chrome.runtime.getURL('localfiles_print.css'),rel:'stylesheet',type:'text/css',media:'print'},[],document.head);
+  // base64 -i localfiles_print.css
+  //Cr.elm('link',{href:chrome.runtime.getURL('localfiles_print.css'),rel:'stylesheet',type:'text/css',media:'print'},[],document.head);
+  Cr.elm('link',{href:'data:text/css;base64,LnByaW50aGlkZGVuew0KCWRpc3BsYXk6bm9uZTsNCn0=',rel:'stylesheet',type:'text/css',media:'print'},[],document.head);
   Cr.elm('link', {id:'shortcutIcon', rel:"shortcut icon", href:directoryURL+startFileName, type:"image/x-icon"}, [], document.head);
 }
 
