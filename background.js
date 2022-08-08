@@ -1,4 +1,4 @@
-import {loadPrefs, goToOrOpenOptions, processFileRows} from "./common_f_stupid_export_statement_useless_token.js";
+import {loadPrefs, goToOrOpenOptions, processFileRows} from "./EXPORT_common.js";
 
 var reqInProg = 0, http, lsnaptabid = 0;
 
