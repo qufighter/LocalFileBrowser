@@ -1126,11 +1126,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse){
 });
 
 chrome.runtime.connect().onDisconnect.addListener(function() {
-  console.log("background page went away! Going to need a page refresh... in 5....")
-  setTimeout(function(){
-    window.location.reload();
-  }, 5000)
+  console.log("localfilebrowser: background page went away!")
+  //setTimeout(function(){
+  //  window.location.reload();
+  //}, 5000)
 })
+
 
 function isViewingDirectory_LoadThumbnails(){
   document.addEventListener('DOMContentLoaded', prepareThumbnailsBrowser);
