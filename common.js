@@ -81,7 +81,7 @@ var indexMapFirefox = {
 		return JSON.parse('["'+row+'"]');
 	},
 	rowSplitter: "\n",
-	loopStartRow: 2,
+	loopStartRow: 1,
 	name: function(rDat){ return safeUnescape(rDat[1]); },
 	escapedName: function(rDat){ return rDat[1]; },
 	isDir: function(rDat){ return rDat[2]; },
@@ -96,7 +96,7 @@ function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf)
 	//console.log('processFileRows', directoryURL, sentStartFileName, resDirName[1], storeItAll)
 	startFileName = sentStartFileName;
 	var indexMap = indexMapChrome;
-	if( resp.match(/^300: /) ){
+	if(window.navigator.userAgent.indexOf('Firefox') > -1){
 		indexMap = indexMapFirefox;
 	}
 	var newDirFiles=[];
