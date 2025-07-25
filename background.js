@@ -1,4 +1,4 @@
-import {loadPrefs, goToOrOpenOptions, processFileRows} from "./EXPORT_common.js";
+import {loadPrefs, goToOrOpenOptions, processFileRows, isFirefox} from "./EXPORT_common.js";
 
 var reqInProg = 0, http, lsnaptabid = 0;
 

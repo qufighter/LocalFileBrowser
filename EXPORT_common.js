@@ -225,4 +225,4 @@ function loadPrefs(cbf){
 }
 
 //run build_exports.sh to create EXPORT_common.js
-export { loadPrefs, goToOrOpenOptions, processFileRows }
+export { loadPrefs, goToOrOpenOptions, processFileRows, isFirefox }
