@@ -1138,7 +1138,7 @@ function isViewingImage_LoadDirectory(){
     if( obj.periodicallyRefresh == 'true' ){
       periodicRefreshDesired = true;
     }
-    if(obj.forcetouch){
+    if( obj.forcetouch == 'true' ){
       touchyMode=true;
     }
 
