@@ -7,6 +7,7 @@ var errorImage = '';
 var singleFileMode = directoryURL.substr(directoryURL.length-1,1)!='/';
 var centerImage = true;
 var thumbnailSize = 75;
+var touchyMode = false; // default: mouse mode
 // to toggle bg color:
 // getComputedStyle(document.body).getPropertyValue('background-color')
 // "rgb(255, 192, 203)"
@@ -14,6 +15,11 @@ var thumbnailSize = 75;
 var play_png = 'data:image/png;base64,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';
 var pause_png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAE8AAAA6CAYAAADx2wT0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA8hJREFUeNrsm8FS2zAQhiXFSYBpXgIuvfQhe+xb9DX6Ij20vbXXkJnMZIgdy2rMrIYfoSWptSBBpZkdGYg33k//ypZZaeecqm1aa879oNb6vwJzjqhM1c/0VuG9Rtqem91vISNLg6f/8XhqcHoiJAe9lgLZvAA0HZiKHJ8baMz3KZB4PpqKHOsUgJLKC82Q4c8hCMcE/Bw8DiQHbWB6nQqwEQZnApsFP+tn4HFKCaEZBiSeMwSwLNkQfCbbnBeOPAJroA8hImz3jA0nlK0ZXzFoPX13T5+1cP0u55yHqvPARpuThSA5eKgWDp4Jeg6eV1kP4A7kqwdgQ0rqSqWtV5UHtzjakuAt4PeoQBUBhwAtBGQi6W8YX6i2A5mJ3GVdJOWzKM+rbrTFfr//Zq01xyWOHobhvvdGSx9NSz4Hyz+3Xq9/3tzcfAHluO12+xXP4Xrvy/e3t7c/rq+vPx8PW2awsFe5bxg+NefL5fLTFEdt245q+YAT/Gq1+jjFV9/33bG7AnCobBtJeZU7bWcpPkeVUsDh3XEKvPFaLgFcD6lsIqmcNW0xdVPgXQI8m+jrgsAdaP7tYN7VOeFpBmAjEHCfCo/mwiX5mkduWDoVoOSLAR3c/abCW5APCeXhY5ORVJ30c14yPFLLPLKkS/HVMOB07jmPe1hOCXgGd79e4H2laKq+5MtQiQvDQGeJA8GtSFSJ8EoaBO611buH9yYGp/4Po8Kr8Cq8Cq+2Cq/Cq/AqvNoqvAqvwqvwKrzaKrwKr8IrvWGtyruDJxIc48OVqjyJoMNKqUmNCn7Cgh5XIjyuKHFKwFgiNggMhFVPa/9EADaC0LDOLgXeQQmUWwS+EKKTgtgIp2wSPGPMeG4nAY98YWVUDGA25YXF2B5cnxjwXglUSZHyWhoMVLNYCkulLRYN2t1u930stAHTWB3qqzl9kL6ac71e/zl2dwBu2Gw2v8bz778MqkHDylD0NdrxvN80EK16KK+1kurT524Zjex6DIu4F2QXZFdw7OuT5+pxwY2DYCxzrNRD3R/WncwYX5ZAdQRuTwNyBzDbYD58Ul57DpdGaK5z6nERtQ/QQSr7ci8fuIqodojMTUrx+zpivvA6OoDVBcCKSltLwXTwdx9Iq/JWw3cAz0YGJ9vd1gevg5sFqjH3PowDqK4PwGVVnmIejv3vDqqMHUA2mOOSAaY+qmgGHqZPaXvPxFYaUmmLyyF/wQbSucRdj9mXZ7H0xTQaTgQdG4DX3G9bxJynGQAl7vQWez0lrTwOYmnvClVJaVsyrBdrfwUYAD5Hj9EJ8jocAAAAAElFTkSuQmCC';
 
+if( window.navigator.maxTouchPoints > 0 ){
+	touchyMode = true; // primarily this no longer means move events will trigger the arrows, and hover events won't be held accountale either
+}else{
+	//touchyMode = true; // TESTING ONLY!!! // tbd could force this mode via options...
+}
 
 chrome.storage.local.get({matchfiles:false},function(obj){
   if( obj.matchfiles && obj.matchfiles.length ){
@@ -206,6 +212,25 @@ function imageViewResizedHandler(ev, useClientWidth){
   }
 }
 var extraControlsLeft=[],extraControlsRight=[];
+
+function hideExtraControls(){
+	showExtraControlsLeftTog({}, true);
+	showExtraControlsRightTog({}, true);
+}
+
+function showExtraControlsLeftTog(ev, forceOff){
+	var left_tog = gel('extraLeftToggle');
+	if( left_tog.getAttribute('data-showing') || forceOff ){
+		hideExtraControlsLeft();
+		left_tog.removeAttribute('data-showing');
+		Cr.empty(left_tog).appendChild(Cr.txt('more'))
+	}else{
+		showExtraControlsLeft();
+		left_tog.setAttribute('data-showing', 1);
+		Cr.empty(left_tog).appendChild(Cr.txt('less'))
+	}
+}
+
 function showExtraControlsLeft(){
   hideExtraControlsRight();
   for(var i in extraControlsLeft){
@@ -217,6 +242,19 @@ function hideExtraControlsLeft(){
   for(var i in extraControlsLeft){
     extraControlsLeft[i].style.display="none";
   }
+}
+
+function showExtraControlsRightTog(ev, forceOff){
+	var left_tog = gel('extraRightToggle');
+	if( left_tog.getAttribute('data-showing') || forceOff ){
+		hideExtraControlsRight();
+		left_tog.removeAttribute('data-showing');
+		Cr.empty(left_tog).appendChild(Cr.txt('more'))
+	}else{
+		showExtraControlsRight();
+		left_tog.setAttribute('data-showing', 1);
+		Cr.empty(left_tog).appendChild(Cr.txt('less'))
+	}
 }
 
 function showExtraControlsRight(){
@@ -271,6 +309,11 @@ function attemptCreateNextPrevArrows(){
       )
     );
   }
+  if(touchyMode){
+	  leftElm.push(Cr.elm('a', {id:'extraLeftToggle', style:'cursor:pointer;vertical-align:top;color:white;font-family:sans-serif;text-shadow:2px 2px 8px black;position:absolute;bottom:0;left:77px;', events:['click',showExtraControlsLeftTog], childNodes:[Cr.txt('more')]}))
+  }
+
+
   extraControlsLeft.push(
     Cr.elm('img',{'title':'View Parent Directory',
                     //'src':chrome.runtime.getURL('img/arrow_up.png'),
@@ -352,7 +395,9 @@ function attemptCreateNextPrevArrows(){
 
   var arrowHolder = document.body; //Cr.elm('div',{id:'arrowHolder',style:'position:relative;'},[],document.body);
 
-  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsLeft],['mouseout',hideExtraControlsLeft]]},leftElm,arrowHolder);
+  var leftEvents = [['mouseover',showExtraControlsLeft],['mouseout',hideExtraControlsLeft]];
+  if(touchyMode){leftEvents = []};
+  Cr.elm('div',{id:'arrowsleft',style:'position:fixed;opacity:0;transition: opacity 0.5s linear;bottom:0px;left:0px;z-index:2147483600;',class:'localfilesctrls printhidden',events:leftEvents},leftElm,arrowHolder);
 
 
   if(showArrows){
@@ -366,10 +411,18 @@ function attemptCreateNextPrevArrows(){
       id:'next_file'
     });
     rightElm.push(tempElm);
-    window.addEventListener('mousemove', mmov);
+	  
+
+    if(touchyMode){
+      window.addEventListener('click', mmov_toggle);
+    }else{
+	  window.addEventListener('mousemove', mmov);
+    }
   }
 
-  Cr.elm('div',{id:'arrowsright',style:'position:fixed;opacity:0;transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;',class:'printhidden',events:[['mouseover',showExtraControlsRight],['mouseout',hideExtraControlsRight]]},rightElm,arrowHolder);
+  var rightEvents =[['mouseover',showExtraControlsRight],['mouseout',hideExtraControlsRight]];
+  if(touchyMode){rightEvents = [];}
+  Cr.elm('div',{id:'arrowsright',style:'position:fixed;opacity:0;transition: opacity 0.5s linear;bottom:0px;right:0px;z-index:2147483600;',class:'localfilesctrls printhidden',events:rightEvents},rightElm,arrowHolder);
 
   window.addEventListener('resize', imageViewResized);
   window.addEventListener('keyup',wk);
@@ -469,6 +522,10 @@ function createExtraControls(){
       src: 'data:image/png;base64,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',
     })
   ],rightFrag);
+
+  if(touchyMode){
+  	Cr.elm('a', {id:'extraRightToggle', style:'cursor:pointer;vertical-align:top;color:white;font-family:sans-serif;text-shadow:2px 2px 8px black;position:absolute;bottom:0;right:77px;', events:['click',showExtraControlsRightTog], childNodes:[Cr.txt('more')]}, rightFrag)
+  }
 
   rightDest.appendChild(rightFrag);
 
@@ -748,6 +805,22 @@ var editMode = { // not really edit mode yet
 function visitOptions(){
   chrome.runtime.sendMessage({goToOrOpenOptions:true}, function(){});
 }
+function mmov_toggle(ev){
+  // in touchy mode, one click MAY toggle arrows OFF depending on the event...
+  clearTimeout(hidTimeout);
+  var now_showing=gel('arrowsleft').style.opacity=='1';
+  if( ev.target.nodeName==='BODY' ){
+	 // !ev.target.closest('.localfilesctrls') ||
+	  if(now_showing){
+	    hidTimeout=setTimeout(hid,25);
+	  }
+  }else if(!ev.target.closest('.localfilesctrls')){
+	  // clicked image maybe, maybe hide controls soon...
+	  hidTimeout=setTimeout(hid,1000);
+  }
+  gel('arrowsleft').style.opacity="1",
+  gel('arrowsright').style.opacity="1";
+}
 function mmov(){
   gel('arrowsleft').style.opacity="1",
   gel('arrowsright').style.opacity="1";
@@ -756,8 +829,11 @@ function mmov(){
 }
 var hidTimeout=0;
 function hid(){
-  gel('arrowsleft').style.opacity="0",
+  gel('arrowsleft').style.opacity="0";
   gel('arrowsright').style.opacity="0";
+  if(touchyMode){
+    hideExtraControls();
+  }
 }
 function wk(ev){
   if(ev.keyCode==37){//left
