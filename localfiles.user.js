@@ -81,16 +81,20 @@ function setApplyStyles(){
   }
 }
 
+var dinObserver = null;
+
 function dni(){
   if(document.body){
     bodyExists=true;
     setApplyStyles();
-    window.removeEventListener('DOMNodeInserted',dni);
+    //window.removeEventListener('DOMNodeInserted',dni);
+    dinObserver.disconnect();
     clearTimeout(timeoutId);
   }
 }
 if(!document.body){
-  window.addEventListener('DOMNodeInserted',dni);
+  //window.addEventListener('DOMNodeInserted',dni);
+  dinObserver = new MutationObserver(dni);
   timeoutId=setTimeout(dni,250);
 }else{
   bodyExists=true;
