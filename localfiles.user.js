@@ -6,6 +6,7 @@ var fileUrlInitComplete = false;
 var errorImage = '';
 var singleFileMode = directoryURL.substr(directoryURL.length-1,1)!='/';
 var centerImage = true;
+var thumbnailSize = 75;
 // to toggle bg color:
 // getComputedStyle(document.body).getPropertyValue('background-color')
 // "rgb(255, 192, 203)"
@@ -975,22 +976,25 @@ function isWindowScrollYMaxed(){
 }
 
 function createThumbnailsBrowser(destination,clFn){
-  var start = dirCurFile - 5;
-  if( start < 0 ) start = 0;
-  for(var i=start,l=dirFiles.length;i<l;i++){
-      createSingleThumb(i,destination,clFn);
-  }
-  if( start > 0 ){
-    for(i=0,l=start;i<l;i++){
-      createSingleThumb(i,destination,clFn);
+  chrome.storage.local.get({thumbsize:75},function(obj){
+	thumbnailSize = obj.thumbsize || 75;
+    var start = dirCurFile - 5;
+    if( start < 0 ) start = 0;
+    for(var i=start,l=dirFiles.length;i<l;i++){
+    	  createSingleThumb(i,destination,clFn);
     }
-  }
+    if( start > 0 ){
+    	for(i=0,l=start;i<l;i++){
+    	  createSingleThumb(i,destination,clFn);
+    	}
+    }
+  });
 }
 var curThumb = 0;
 function createSingleThumb(fileIndex,destination,clFn){
   var i = fileIndex;
   if(isValidFile(dirFiles[i].file_name)){
-    var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:75,height:75,style:'display:inline-block;cursor:pointer;position:relative;',events:['click',clFn]},[],destination);//transition:box-shadow ease-out 0.1s;
+    var c=Cr.elm('canvas',{id:'cicn_'+i,title:dirFiles[i].file_name,'name':dirFiles[i].file_name,width:thumbnailSize,height:thumbnailSize,style:'display:inline-block;cursor:pointer;position:relative;',events:['click',clFn]},[],destination);//transition:box-shadow ease-out 0.1s;
     unloadedImages.push(fileIndex);
   }
   updateThumbnail();

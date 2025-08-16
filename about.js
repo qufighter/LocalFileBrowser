@@ -14,6 +14,7 @@ var _optionDefaults = {
 	cachelisting:'true',
 	fastmode:'false',
 	bodystyle:'background-color: white;',
+	thumbsize:75,
 	sorttype:'filename',
 	periodicallyRefresh:'false',
 	alwaysAutoPlay:'false',
@@ -43,6 +44,7 @@ function saveSettings(){
 		matchfiles:parseElementValue(gel('matchfiles')),
 		sorttype:parseElementValue(gel('sorttype')),
 		bodystyle:parseElementValue(gel('bodystyle')),
+		thumbsize:parseElementValue(gel('thumbsize')),
 		periodicallyRefresh:parseElementValue(gel('periodicallyRefresh')),
 		alwaysAutoPlay:parseElementValue(gel('alwaysAutoPlay')),
 		fetching:'0'
@@ -162,6 +164,11 @@ function begin(){
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
 				Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype)),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' save then refresh page or change directory')])
+			]),
+			Cr.elm('label',{},[
+				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Thumbnail Size')]),
+				Cr.elm('input',{type:'number',step:5,min:10,max:500,id:'thumbsize',value:stor.thumbsize,valuebinding:'value'}),
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' Enter an integer size value, default 75')])
 			]),
 
 			Cr.elm('strong',{
