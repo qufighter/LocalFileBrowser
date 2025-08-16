@@ -13,6 +13,7 @@ var _optionDefaults = {
 	leturlbarbreak:'false',
 	cachelisting:'true',
 	fastmode:'false',
+	forcetouch:'false',
 	bodystyle:'background-color: white;',
 	thumbsize:75,
 	sorttype:'filename',
@@ -40,6 +41,7 @@ function saveSettings(){
 	chrome.storage.local.set({
 		//leturlbarbreak:parseElementValue(gel('leturlbarbreak')),
 		fastmode:parseElementValue(gel('fastmode')),
+		forcetouch:parseElementValue(gel('forcetouch')),
 		cachelisting:parseElementValue(gel('cachelisting')),
 		matchfiles:parseElementValue(gel('matchfiles')),
 		sorttype:parseElementValue(gel('sorttype')),
@@ -137,6 +139,11 @@ function begin(){
 					Cr.elm('a',{href:'#note2',class:'noline'},[Cr.txt(' ***')]),
 					Cr.txt(')')
 				]),
+			]),
+			Cr.elm('label',{title:'Force Touch Mode'},[
+				Cr.elm('input',{type:'checkbox',id:'forcetouch',checked:(stor.forcetouch=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
+				Cr.txt(' Force "Touch" Mode'),
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' Mouse move and hover events ignored, tablet mode default, "sticky controls".')])
 			]),
 //			Cr.elm('label',{id:'opt_leturlbarbreak',style:'margin-left:15px;display:'+(stor.fastmode=='true'?'block':'none')+';',title:'history.pushState does not work on file:// url because the function that determines the origin doesn\'t work on file URLs.'},[
 //				Cr.elm('input',{type:'checkbox',id:'leturlbarbreak',checked:(stor.leturlbarbreak=='true'?'checked':''),valuebinding:'checked'}),

@@ -1138,6 +1138,9 @@ function isViewingImage_LoadDirectory(){
     if( obj.periodicallyRefresh == 'true' ){
       periodicRefreshDesired = true;
     }
+    if(obj.forcetouch){
+      touchyMode=true;
+    }
 
     if(cacheIsCurrent){
       var dirCachedFiles=JSON.parse(obj.dir_cache);
