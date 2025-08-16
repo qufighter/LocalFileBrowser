@@ -1512,6 +1512,9 @@ function auto_play(ev){
     setTimeout(function(){
       window.addEventListener('click', stop_auto_play);
     },5);
+    // especially for touchyMode we want the controls to hide soon...
+    clearTimeout(hidTimeout);
+    hidTimeout=setTimeout(hid,1000);
   }
 }
 function pause_auto_play(ev){
