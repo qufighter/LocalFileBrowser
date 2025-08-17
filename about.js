@@ -165,7 +165,11 @@ function begin(){
 					Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
 				]),
 				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(/*' '+ _optionDefaults.matchfiles + */' works like /('+ _optionDefaults.matchfiles +')$/i' )])
+				Cr.elm('span',{class:'monohelp'},[
+					Cr.txt(' works like /(' ),
+					Cr.elm('span', {style:'color:black;background-color:#F0F0F0;', childNodes: [Cr.txt( _optionDefaults.matchfiles )]}),
+					Cr.txt(')$/i try adding |.webm|.mp4 too!' )
+				])
 			]),
 			Cr.elm('label',{},[
 				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
