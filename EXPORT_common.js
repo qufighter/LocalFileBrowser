@@ -83,7 +83,7 @@ var indexMapHtmlBasicHref = {
 	loopStartRow: 1,
 	name: function(rDat, directoryURL){ return rDat[0].replace(new RegExp("^"+directoryURL), ''); },
 	escapedName: function(rDat, directoryURL){ return escape(rDat[0].replace(new RegExp("^"+directoryURL), '')); },
-	isDir: function(rDat){ return 0; },
+	isDir: function(rDat){ return 0; }, // TBD FIXME!! (will be missing SIZE data or no extension, or end in slash?)
 	size: function(rDat){ return 1; }, // 0 bytes is skipped!
 	datetime: function(rDat){ return new Date(rDat[1]); },
 	timestamp: function(rDat){ return rDat[1]; }
