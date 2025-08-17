@@ -61,6 +61,34 @@ function safeUnescape(val){
 	return unescape(val);
 }
 
+var indexMapHtmlBasicHref = {
+	rowEndIndexMatcher: false, // '"',
+	eachRowSplitterFn: function(row){
+		var hrefEn=row.indexOf('"');
+		var hrefVal = row.substr(0,hrefEn);
+		// this may be localized... and this date may fail to match some locales...
+		// tbd fallbback modes or enhance regex...
+		var resultDate = null;
+		var dateStrMatch = row.match(/([\d]{1,2}\/[\d]{1,2}\/[\d]{2,4}[\w\s\d:,]+)</)
+		if( dateStrMatch && dateStrMatch[1] ){
+			resultDate = new Date(dateStrMatch[1]);
+		}
+		if( !resultDate || resultDate.getTime() <= 0 ){
+			//console.warn("no dt for row", row)
+			resultDate = new Date();
+		}
+		return JSON.parse('["'+hrefVal+'", "'+resultDate.getTime()+'"]')
+	},
+	rowSplitter: 'href="',
+	loopStartRow: 1,
+	name: function(rDat, directoryURL){ return rDat[0].replace(new RegExp("^"+directoryURL), ''); },
+	escapedName: function(rDat, directoryURL){ return escape(rDat[0].replace(new RegExp("^"+directoryURL), '')); },
+	isDir: function(rDat){ return 0; },
+	size: function(rDat){ return 1; }, // 0 bytes is skipped!
+	datetime: function(rDat){ return new Date(rDat[1]); },
+	timestamp: function(rDat){ return rDat[1]; }
+}
+
 var indexMapChrome = {
 	rowEndIndexMatcher: '");',
 	eachRowSplitterFn: function(row){return JSON.parse('["'+row+'"]')},
@@ -91,16 +119,9 @@ var indexMapFirefox = {
 	timestamp: function(rDat){ return new Date(safeUnescape(rDat[3])).getTime(); }
 };
 
-function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf){
-	if(!resp) return;
-	//var resDirName = resp.match(/start\(\"([\/\w]+)\"\);/);
-	//console.log('processFileRows', directoryURL, sentStartFileName, resDirName[1], storeItAll)
-	startFileName = sentStartFileName;
-	var indexMap = indexMapChrome;
-	if( resp.match(/^300: /) ){
-		indexMap = indexMapFirefox;
-	}
+function processFileRowsWithIndexMap(directoryURL, resp, indexMap){
 	var newDirFiles=[];
+	directoryURL = directoryURL.replace(/^file:\/\//, '');
 	var rows=resp.split(indexMap.rowSplitter);
 	var f0,f,en,rDat,datetime, date, time, size, timestamp;
 	for(var i=indexMap.loopStartRow,l=rows.length;i<l;i++){
@@ -109,13 +130,12 @@ function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf)
 			en=rows[i].indexOf(indexMap.rowEndIndexMatcher);
 			rows[i] = rows[i].substr(0,en)
 		}
-
+		
 		rDat = indexMap.eachRowSplitterFn(''+rows[i]);
 		if( !rDat || !rDat.length )continue;
 
-
-		f0 = indexMap.name(rDat);
-		f = indexMap.escapedName(rDat); //escaped name
+		f0 = indexMap.name(rDat, directoryURL);
+		f = indexMap.escapedName(rDat, directoryURL); //escaped name
 
 		if(f != '..'){
 			if(!isValidFile(f))continue;
@@ -132,6 +152,25 @@ function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf)
 			}
 		}
 	}
+	// console.log(directoryURL, newDirFiles, indexMap); // TESTING ONLY
+	return newDirFiles;
+}
+
+function processFileRows(directoryURL, sentStartFileName, resp, storeItAll, cbf){
+	if(!resp) return;
+	//var resDirName = resp.match(/start\(\"([\/\w]+)\"\);/);
+	//console.log('processFileRows', directoryURL, sentStartFileName, resDirName[1], storeItAll)
+	startFileName = sentStartFileName;
+	var indexMap = indexMapChrome;
+	if( resp.match(/^300: /) ){
+		indexMap = indexMapFirefox;
+	}
+	var newDirFiles = processFileRowsWithIndexMap(directoryURL, resp, indexMap);
+	// newDirFiles=[]; // simulate failure TESTING ONLY
+	if(newDirFiles.length < 1 ){
+		newDirFiles = processFileRowsWithIndexMap(directoryURL, resp, indexMapHtmlBasicHref);
+	}
+	
 	dirFiles = newDirFiles;
 	determineSort(true);
 
