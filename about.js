@@ -126,61 +126,76 @@ function begin(){
 		stor.matchfiles = addSupportedExtensions(stor.matchfiles);
 
 		Cr.elm('div',{class:'label_rows'},[
-			Cr.elm('label',{title:'If we match any non image files, we drop out of fast mode, and any sideshow in progress is halted.'},[
-				Cr.elm('input',{type:'checkbox',id:'fastmode',checked:(stor.fastmode=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
-				Cr.txt(' "Fast" Mode'),
-				Cr.elm('span',{class:'monohelp'},[Cr.txt(' (Less flicker, incorrect URL bar, images only)')])
-			]),
-			Cr.elm('label',{title:'Faster when not using fast mode, first navigating to an image from folder view, or large static folder selected.'+_newline_+'Change directory to update cache, restart chrome or reload extension to clear cache.'},[
-				Cr.elm('input',{type:'checkbox',id:'cachelisting',checked:(stor.cachelisting=='true'?'checked':''),valuebinding:'checked'}),
-				Cr.txt(' Cache current directory list'),
-				Cr.elm('span',{class:'monohelp'},[
-					Cr.txt(' (faster  / actually works'),
-					Cr.elm('a',{href:'#note2',class:'noline'},[Cr.txt(' ***')]),
-					Cr.txt(')')
+			//Cr.elm('div',{class:'label_row', childNodes:[]}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{title:'If we match any non image files, we drop out of fast mode, and any sideshow in progress is halted.'},[
+					Cr.elm('input',{type:'checkbox',id:'fastmode',checked:(stor.fastmode=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
+					Cr.txt(' "Fast" Mode')
 				]),
-			]),
-			Cr.elm('label',{title:'Force Touch Mode'},[
-				Cr.elm('input',{type:'checkbox',id:'forcetouch',checked:(stor.forcetouch=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
-				Cr.txt(' Force "Touch" Mode'),
+				Cr.elm('span',{class:'monohelp'},[Cr.txt(' (Less flicker, incorrect URL bar, images only)')])
+			]}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{title:'Faster when not using fast mode, first navigating to an image from folder view, or large static folder selected.'+_newline_+'Change directory to update cache, restart chrome or reload extension to clear cache.'},[
+					Cr.elm('input',{type:'checkbox',id:'cachelisting',checked:(stor.cachelisting=='true'?'checked':''),valuebinding:'checked'}),
+					Cr.txt(' Cache current directory list')
+				]),
+				Cr.elm('span',{class:'monohelp'},[
+				   Cr.txt(' (faster  / actually works'),
+				   Cr.elm('a',{href:'#note2',class:'noline'},[Cr.txt(' ***')]),
+				   Cr.txt(')')
+				])
+			]}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{title:'Force Touch Mode'},[
+					Cr.elm('input',{type:'checkbox',id:'forcetouch',checked:(stor.forcetouch=='true'?'checked':''),valuebinding:'checked',/*dependstrue:'opt_leturlbarbreak',event:['click',applyDependsTrue]*/}),
+					Cr.txt(' Force "Touch" Mode')
+				]),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' Mouse move and hover events ignored, tablet mode default, "sticky controls".')])
-			]),
+			]}),
 //			Cr.elm('label',{id:'opt_leturlbarbreak',style:'margin-left:15px;display:'+(stor.fastmode=='true'?'block':'none')+';',title:'history.pushState does not work on file:// url because the function that determines the origin doesn\'t work on file URLs.'},[
 //				Cr.elm('input',{type:'checkbox',id:'leturlbarbreak',checked:(stor.leturlbarbreak=='true'?'checked':''),valuebinding:'checked'}),
 //				Cr.txt(' Let url bar and back buttons break (faster yet, less flicker, broken URL bar)')
 //			]),
-			Cr.elm('label',{},[
-				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Body CSS')]),
-				Cr.elm('input',{type:'text',id:'bodystyle',value:stor.bodystyle,valuebinding:'value'}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{},[
+					Cr.elm('span',{class:'labeltxt'},[Cr.txt('Body CSS')]),
+					Cr.elm('input',{type:'text',id:'bodystyle',value:stor.bodystyle,valuebinding:'value'})
+				]),
 				Cr.elm('span',{class:'monohelp'},[
 					Cr.txt(' '+ _optionDefaults.bodystyle+' or pick a different '),
 					Cr.elm('a',{href:'https://developer.mozilla.org/en-US/docs/Web/CSS/color_value',target:'_blank'},[
 						Cr.txt('css color value')
 					])
 				])
-			]),
-			Cr.elm('label',{},[
-				Cr.elm('span',{class:'labeltxt'},[
-					Cr.txt('Match Files'),
-					Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
+			]}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{},[
+					Cr.elm('span',{class:'labeltxt'},[
+						Cr.txt('Match Files'),
+						Cr.elm('a',{href:'#note1',class:'noline'},[Cr.txt(' ** ')])
+					]),
+					Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'})
 				]),
-				Cr.elm('input',{type:'text',id:'matchfiles',value:stor.matchfiles,valuebinding:'value'}),
 				Cr.elm('span',{class:'monohelp'},[
 					Cr.txt(' works like /(' ),
 					Cr.elm('span', {style:'color:black;background-color:#F0F0F0;', childNodes: [Cr.txt( _optionDefaults.matchfiles )]}),
 					Cr.txt(')$/i try adding |.webm|.mp4 too!' )
 				])
-			]),
-			Cr.elm('label',{},[
-				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
-				Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype)),
+			]}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{},[
+					Cr.elm('span',{class:'labeltxt'},[Cr.txt('Sort')]),
+					Cr.elm('select',{type:'text',id:'sorttype',valuebinding:'value'},getSortTypeOptions(stor.sorttype))
+				]),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' save then refresh page or change directory')])
-			]),
-			Cr.elm('label',{},[
-				Cr.elm('span',{class:'labeltxt'},[Cr.txt('Thumbnail Size')]),
-				Cr.elm('input',{type:'number',step:5,min:10,max:500,id:'thumbsize',value:stor.thumbsize,valuebinding:'value'}),
+			]}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{},[
+					Cr.elm('span',{class:'labeltxt'},[Cr.txt('Thumbnail Size')]),
+					Cr.elm('input',{type:'number',step:5,min:10,max:500,id:'thumbsize',value:stor.thumbsize,valuebinding:'value'})
+				]),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' Enter an integer size value, default 75')])
-			]),
+			]}),
 
 			Cr.elm('strong',{
 				childNodes:[
@@ -188,22 +203,24 @@ function begin(){
 				]
 			}),
 
-			Cr.elm('label',{title:'Useful for Kiosk where files may be added any time, bad for large directories as this pauses the show temporarily.'},[
-				Cr.elm('input',{type:'checkbox',id:'periodicallyRefresh',checked:(stor.periodicallyRefresh=='true'?'checked':''),valuebinding:'checked'}),
-				Cr.txt(' Periodically Refresh Directory'),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{title:'Useful for Kiosk where files may be added any time, bad for large directories as this pauses the show temporarily.'},[
+					Cr.elm('input',{type:'checkbox',id:'periodicallyRefresh',checked:(stor.periodicallyRefresh=='true'?'checked':''),valuebinding:'checked'}),
+					Cr.txt(' Periodically Refresh Directory')
+				]),
 				Cr.elm('span',{class:'monohelp'},[Cr.txt(' (every 2-3 times through slideshow)')])
-			]),
-
-			Cr.elm('label',{title:'Useful for Kiosk after extension updates, or in general if you alawys like a slideshow.  Should use your last manually triggered slideshow velocity setting (as long as it was not a super fast one).'},[
-				Cr.elm('input',{type:'checkbox',id:'alwaysAutoPlay',checked:(stor.alwaysAutoPlay=='true'?'checked':''),valuebinding:'checked'}),
-				Cr.txt(' Automatic Slideshow'),
+			]}),
+			Cr.elm('div',{class:'label_row', childNodes:[
+				Cr.elm('label',{title:'Useful for Kiosk after extension updates, or in general if you alawys like a slideshow.  Should use your last manually triggered slideshow velocity setting (as long as it was not a super fast one).'},[
+					Cr.elm('input',{type:'checkbox',id:'alwaysAutoPlay',checked:(stor.alwaysAutoPlay=='true'?'checked':''),valuebinding:'checked'}),
+					Cr.txt(' Automatic Slideshow'),
+				]),
 				Cr.elm('span',{class:'monohelp'},[
 					Cr.txt(' ('),
 					Cr.elm('span',{class:'key'},[Cr.txt(' enter')]),
 					Cr.txt(' slideshow always)')
-
 				])
-			]),
+			]}),
 
 			Cr.elm('div',{style:'padding-top:10px;'},[
 				Cr.elm('span',{class:'labeltxt'},[]),
